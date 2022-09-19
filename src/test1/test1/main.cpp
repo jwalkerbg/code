@@ -258,13 +258,22 @@ int main()
     WithTimer bh;
 
     bh.setGuardTimer();
-    LOG_INFO("main is joined to bh.worker");
 
     // comment or uncomment next line to see how the timer waits its full time or is
     // terminated after about 3 seconds (the time stopper() sleep before notifying)
-    //std::thread th1(&WithTimer::stopper,&bh);
+    std::thread th1(&WithTimer::stopper,&bh);
 
-    bh.worker.join();
+    //LOG_INFO("main is joined to th1");
+    if (th1.joinable()) th1.join();
+    LOG_INFO("main is joined to bh.worker");
+    if (bh.worker.joinable()) bh.worker.join();
+
+    LOG_INFO("Activate bh timer again");
+
+    bh.setGuardTimer();
+    LOG_INFO("main is joined to bh.worker");
+    if (bh.worker.joinable()) bh.worker.join();
+
     LOG_INFO("main continues to \"return 0\"");
 
 #endif  // defined(USE_SPT)
@@ -353,6 +362,7 @@ void WithTimer::guardTimerThread(std::function<void(void)> callBack, std::time_t
     auto thistime = std::chrono::steady_clock::now();
     if (cond || (thistime >= end_time)) {
       callBack();
+      stopGuardTimer = false;
       break;
     }
   }
@@ -366,7 +376,7 @@ void WithTimer::guardTimerThread(std::function<void(void)> callBack, std::time_t
 void WithTimer::stopper()
 {
   LOG_INFO("WithTimer::stopper() entered")
-  std::this_thread::sleep_for(std::chrono::seconds(3));
+  std::this_thread::sleep_for(std::chrono::seconds(4));
 
   LOG_INFO("WithTimer::stopper() unlocks");
   // Tell the timer to exit
