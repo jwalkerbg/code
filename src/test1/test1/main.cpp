@@ -10,9 +10,10 @@
 #include <limits.h>
 #include <regex>
 
-using namespace std;
+#include "singlepulsetimer.h"
+#include "logger.h"
 
-#define LOG_INFO(str) { std::cout << __FILE__ << ":" << __LINE__ << ": " << str << std::endl; }
+using namespace std;
 
 //#define USE_STATIC_MEMBER_FUNC
 //#define USE_NEW_DELETE
@@ -22,7 +23,8 @@ using namespace std;
 //#define USE_VECTOR_OF_STRINGS
 //#define USE_SEARCH_FOR_SET_OF_STRINGS
 //#define USE_STOI
-#define USE_SPT
+//#define USE_SPT
+#define USE_SPT_CLASS
 
 #if defined(USE_STATIC_MEMBER_FUNC)
 class CMyClass
@@ -63,18 +65,47 @@ public:
 
   // guard timer if UI crashes to reset states active and sensors
     void setGuardTimer();
-    void setGuardTimer(std::function<void(void)>callBack, std::time_t bhInterval);
-    void guardTimerThread(std::function<void(void)> callBack, std::time_t bhInterval);
+    void setGuardTimer(std::function<void (void)>callBack, std::time_t bhInterval);
+    void guardTimerThread(std::function<void (void)> callBack, std::time_t bhInterval);
     std::thread worker;
     std::condition_variable cv;
     std::mutex sgtm;
     bool stopGuardTimer;
+
     // callback function when the guard timer expires
     void reset();
     void stopper();
 };
 
 #endif  // defined(USE_SPT)
+
+#if defined(USE_SPT_CLASS)
+
+typedef std::function<void (bool how)> TCallback;
+
+class SptUser {
+public:
+  SptUser() {};
+  ~SptUser() {};
+
+  static void callback(bool how);
+};
+
+void SptUser::callback(bool how)
+{
+  std::stringstream str;
+  str << "void SptUser::callback(bool how) " << how;
+  LOG_INFO(str.str());
+}
+
+void cfunc(bool how);
+
+void cfunc(bool how)
+{
+
+}
+
+#endif  // defined(USE_SPT_CLASS)
 
 int main()
 {
@@ -278,6 +309,28 @@ int main()
 
 #endif  // defined(USE_SPT)
 
+#if defined(USE_SPT_CLASS)
+
+    SptUser sptu;
+
+    SinglePulseTimer spt;
+
+    //spt.SetSinglePulseTimer(&sptu.callback,5);
+    // std::bind(&WithTimer::reset, this)
+
+    CBtype func = cfunc;
+    spt.SetSinglePulseTimer(&sptu.callback,7);
+
+    std::this_thread::sleep_for(std::chrono::seconds(2));
+    spt.PrematureFinish();
+
+    if (spt.GetThreadObject().joinable()) {
+      spt.GetThreadObject().join();
+    }
+
+
+#endif  // defined(USE_SPT_CLASS)
+
     return 0;
 }
 
@@ -303,7 +356,7 @@ int FindSubstring(const std::string& str, std::string substr[])
 WithTimer::WithTimer() :
   stopGuardTimer(false)
 {
-  LOG_INFO("WithTimer::WithTimer() Destructor executed");
+  LOG_INFO("WithTimer::WithTimer() Constructor executed");
 }
 
 WithTimer::~WithTimer()
@@ -387,5 +440,9 @@ void WithTimer::stopper()
   cv.notify_one();
   LOG_INFO("WithTimer::stopper() exited");
 }
+
+///////////////////
+
+
 
 #endif  // defined(USE_SPT)
