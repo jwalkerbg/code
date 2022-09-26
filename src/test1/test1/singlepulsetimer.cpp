@@ -5,7 +5,6 @@
 SinglePulseTimer::SinglePulseTimer()
 {
   SetStopTimer(false);
-  cb = nullptr;
 
   LOG_INFO("SinglePulseTimer::SinglePulseTimer Constructor executed");
 }
@@ -17,7 +16,7 @@ SinglePulseTimer::~SinglePulseTimer()
     th.join();
   }
 
-  LOG_INFO("SinglePulseTimer::~SinglePulseTimer() Descctructor executed");
+  LOG_INFO("SinglePulseTimer::~SinglePulseTimer() Destructor executed");
 }
 
 void SinglePulseTimer::SetSinglePulseTimer(CBtype callBack, std::time_t interval)
@@ -32,7 +31,6 @@ void SinglePulseTimer::threadFunc(CBtype callBack, std::time_t interval)
   std::unique_lock<std::mutex> lk(cv_m);
 
   auto end_time = std::chrono::steady_clock::now();
-  auto before = end_time;
   end_time += std::chrono::seconds(interval);
 
   SetStopTimer(false);

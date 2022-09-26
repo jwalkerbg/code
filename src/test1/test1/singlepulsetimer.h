@@ -19,10 +19,6 @@ public:
   // Activates timer for the specified time interval and call specified callback.
   void SetSinglePulseTimer(CBtype callBack, std::time_t interval);
 
-private:
-  // call back function to be called at the end of timer interval or if prematurely stopped
-  void (*cb)(void);
-
 public:
   // use GetThreadObject() to access th object (needed for join / joinable par example)
   std::thread& GetThreadObject() { return th; }
