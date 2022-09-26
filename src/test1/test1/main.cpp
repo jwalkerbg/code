@@ -88,21 +88,34 @@ public:
   SptUser() {};
   ~SptUser() {};
 
-  static void callback(bool how);
+  // static class wrapper around object callback function
+  static void cbWrapper(void* obj, bool how);
+  // the real object callback function
+  void callback(bool how);
 };
+
+void SptUser::cbWrapper(void* obj, bool how)
+{
+  std::stringstream str;
+  str << "SptUser::cbWrapper(void* obj, bool how) " << how;
+  LOG_INFO(str.str());
+
+  SptUser* thisobject = static_cast<SptUser*>(obj);
+  if (thisobject) {
+    thisobject->callback(how);
+  }
+  else {
+    // do the work here
+  }
+
+}
 
 void SptUser::callback(bool how)
 {
   std::stringstream str;
-  str << "void SptUser::callback(bool how) " << how;
+  str << "SptUser::objectFunc() " << "The real work is done here, because object context is known." << std::endl;
+  str << "********** The timer " << (how ? "exited prematurely" : "exipred") << ".";
   LOG_INFO(str.str());
-}
-
-void cfunc(bool how);
-
-void cfunc(bool how)
-{
-
 }
 
 #endif  // defined(USE_SPT_CLASS)
@@ -313,21 +326,24 @@ int main()
 
     SptUser sptu;
 
-    SinglePulseTimer spt;
+    // start via constructor
+    SinglePulseTimer spt(SptUser::cbWrapper,&sptu,7);
 
-    //spt.SetSinglePulseTimer(&sptu.callback,5);
-    // std::bind(&WithTimer::reset, this)
+    // postponed start via method
+    // SinglePulseTimer spt;
+    // spt.setSinglePulseTimer(SptUser::cbWrapper,&sptu,7);
 
-    CBtype func = cfunc;
-    spt.SetSinglePulseTimer(&sptu.callback,7);
-
-    std::this_thread::sleep_for(std::chrono::seconds(2));
-    spt.PrematureFinish();
+    // comment following two lines to see timeouted exit
+    // std::this_thread::sleep_for(std::chrono::seconds(2));
+    // spt.PrematureFinish();
 
     if (spt.GetThreadObject().joinable()) {
       spt.GetThreadObject().join();
     }
-
+    \
+    std::stringstream str;
+    str << "main(): Polling spt timer: It " << (spt.isExprired() ? "expired" : "exited prematurely") << ".";
+    LOG_INFO(str.str());
 
 #endif  // defined(USE_SPT_CLASS)
 
