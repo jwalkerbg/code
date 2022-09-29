@@ -92,10 +92,14 @@ public:
   static void cbWrapper(void* obj, bool how);
   // the real object callback function
   void callback(bool how);
+  static std::mutex cblock;
 };
+
+std::mutex SptUser::cblock;
 
 void SptUser::cbWrapper(void* obj, bool how)
 {
+  std::unique_lock<std::mutex> lk(cblock);
   std::stringstream str;
   str << "SptUser::cbWrapper(void* obj, bool how) " << how;
   LOG_INFO(str.str());
@@ -325,25 +329,37 @@ int main()
 #if defined(USE_SPT_CLASS)
 
     SptUser sptu;
+    SptUser sptv;
 
     // start via constructor
-    SinglePulseTimer spt(SptUser::cbWrapper,&sptu,7);
+    SinglePulseTimer sptut(SptUser::cbWrapper,&sptu,7);
+    SinglePulseTimer sptvt(SptUser::cbWrapper,&sptv,7);
 
     // postponed start via method
     // SinglePulseTimer spt;
-    // spt.setSinglePulseTimer(SptUser::cbWrapper,&sptu,7);
+    // sptut.setSinglePulseTimer(SptUser::cbWrapper,&sptu,7);
 
     // comment following two lines to see timeouted exit
     // std::this_thread::sleep_for(std::chrono::seconds(2));
-    // spt.PrematureFinish();
+    // sptut.PrematureFinish();
 
-    if (spt.GetThreadObject().joinable()) {
-      spt.GetThreadObject().join();
+    if (sptut.GetThreadObject().joinable()) {
+      sptut.GetThreadObject().join();
     }
-    \
-    std::stringstream str;
-    str << "main(): Polling spt timer: It " << (spt.isExprired() ? "expired" : "exited prematurely") << ".";
-    LOG_INFO(str.str());
+    if (sptvt.GetThreadObject().joinable()) {
+      sptvt.GetThreadObject().join();
+    }
+
+    {
+      std::stringstream str;
+      str << "main(): Polling sptut timer: It " << (sptut.isExprired() ? "expired" : "exited prematurely") << ".";
+      LOG_INFO(str.str());
+    }
+    {
+      std::stringstream str;
+      str << "main(): Polling sptvt timer: It " << (sptvt.isExprired() ? "expired" : "exited prematurely") << ".";
+      LOG_INFO(str.str());
+    }
 
 #endif  // defined(USE_SPT_CLASS)
 
