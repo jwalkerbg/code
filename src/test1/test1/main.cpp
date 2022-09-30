@@ -25,6 +25,7 @@ using namespace std;
 //#define USE_STOI
 //#define USE_SPT
 #define USE_SPT_CLASS
+#define USE_TIME_FUNCTIONS
 
 #if defined(USE_STATIC_MEMBER_FUNC)
 class CMyClass
@@ -346,6 +347,58 @@ int main()
     LOG_INFO(str.str());
 
 #endif  // defined(USE_SPT_CLASS)
+
+#if defined(USE_TIME_FUNCTIONS)
+
+    time_t tmnow;
+    tmnow = std::time(nullptr);
+
+    struct tm lf = *std::gmtime(&tmnow);
+
+    {
+      std::stringstream str;
+      str << "lf.tm_hour: " << lf.tm_hour << std::endl
+          << "lf.tm_min: " << lf.tm_min << std::endl
+          << "lf.tm_sec: " << lf.tm_sec << std::endl;
+      LOG_INFO(str.str());
+    }
+
+    std::tm local = *std::localtime(&tmnow);
+
+    {
+      std::stringstream str;
+      str
+          << "local - 03::30: " << tmnow - (3*60*60+30*60) << std::endl
+          << "local: " << tmnow << std::endl
+          << "local.tm_hour: " << local.tm_hour << std::endl
+          << "local.tm_min: " << local.tm_min << std::endl
+          << "local.tm_sec: " << local.tm_sec << std::endl;
+      LOG_INFO(str.str());
+    }
+
+    std::tm bkStart{};
+    bkStart.tm_hour = 5;
+    bkStart.tm_min = 0;
+    bkStart.tm_sec = 0;
+
+    std::tm bkEnd{};
+    bkEnd.tm_hour = 13;
+    bkEnd.tm_min = 0;
+    bkEnd.tm_sec = 0;
+
+    // check to see if local is in [bkStart .. bkEnd]
+    int bkStart_i = bkStart.tm_hour * (60*60) + bkStart.tm_min * 60 + bkStart.tm_sec;
+    int bkEnd_i = bkEnd.tm_hour * (60*60) + bkEnd.tm_min * 60 + bkEnd.tm_sec;
+    int local_i = local.tm_hour * (60*60) + local.tm_min * 60 + local.tm_sec;
+
+    if ((local_i >= bkStart_i) && (local_i <= bkEnd_i)) {
+      LOG_INFO("We are in!");
+    }
+    else {
+      LOG_INFO("We are out!");
+    }
+
+#endif  // defined(USE_TIME_FUNCTIONS)
 
     return 0;
 }
