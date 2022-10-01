@@ -332,11 +332,13 @@ int main()
     SptUser sptv;
 
     // start via constructor
-    SinglePulseTimer sptut(SptUser::cbWrapper,&sptu,7);
-    SinglePulseTimer sptvt(SptUser::cbWrapper,&sptv,7);
+    std::string sputut = "sptut";
+    std::string sputvt = "sptvt";
+    SinglePulseTimer sptut(sputut, SptUser::cbWrapper,&sptu,7);
+    SinglePulseTimer sptvt(sputvt, SptUser::cbWrapper,&sptv,7);
 
     // postponed start via method
-    // SinglePulseTimer spt;
+    // SinglePulseTimer sptut;
     // sptut.setSinglePulseTimer(SptUser::cbWrapper,&sptu,7);
 
     // comment following two lines to see timeouted exit
@@ -359,6 +361,20 @@ int main()
       std::stringstream str;
       str << "main(): Polling sptvt timer: It " << (sptvt.isExprired() ? "expired" : "exited prematurely") << ".";
       LOG_INFO(str.str());
+    }
+
+    sptut.setSinglePulseTimer(SptUser::cbWrapper,&sptu,5);
+
+    std::this_thread::sleep_for(std::chrono::seconds(8));
+
+    if (sptut.GetThreadObject().joinable()) {
+      sptut.GetThreadObject().join();
+    }
+
+    sptut.setSinglePulseTimer(SptUser::cbWrapper,&sptu,5);
+
+    if (sptut.GetThreadObject().joinable()) {
+      sptut.GetThreadObject().join();
     }
 
 #endif  // defined(USE_SPT_CLASS)
