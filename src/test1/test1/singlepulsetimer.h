@@ -13,11 +13,19 @@ typedef std::function<void (void* obj, bool)> CBtype;
 class SinglePulseTimer {
 public:
   SinglePulseTimer();
+  SinglePulseTimer(std::string& value) { setId(value); }
   SinglePulseTimer(CBtype callBack, void* obj, std::time_t interval);
+  SinglePulseTimer(std::string& value, CBtype callBack, void* obj, std::time_t interval);
   ~SinglePulseTimer();
 
   // Activates timer for the specified time interval and call specified callback.
   void setSinglePulseTimer(CBtype callBack, void* obj, std::time_t interval);
+
+public:
+  void setId(std::string& value) { id = value; }
+  const std::string& getId() { return id;  }
+private:
+  std::string id;
 
 public:
   // use GetThreadObject() to access th object (needed for join / joinable par example)

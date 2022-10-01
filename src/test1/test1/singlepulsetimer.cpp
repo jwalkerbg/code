@@ -17,6 +17,14 @@ SinglePulseTimer::SinglePulseTimer(CBtype callBack, void* obj, std::time_t inter
   setSinglePulseTimer(callBack,obj,interval);
 }
 
+
+SinglePulseTimer::SinglePulseTimer(std::string& value, CBtype callBack, void* obj, std::time_t interval)
+{
+  LOG_INFO("SinglePulseTimer::SinglePulseTimer(std::string& value, CBtype callBack, void* obj, std::time_t interval) Constructor executed");
+  setId(value);
+  setSinglePulseTimer(callBack,obj,interval);
+}
+
 SinglePulseTimer::~SinglePulseTimer()
 {
   PrematureFinish();
