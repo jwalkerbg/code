@@ -42,7 +42,7 @@ void SinglePulseTimer::setSinglePulseTimer(CBtype callBack, void* obj, std::time
 
 void SinglePulseTimer::threadFunc(CBtype callBack, void* obj, std::time_t interval)
 {
-  LOG_INFO("SinglePulseTimer::threadFunc entered");
+  LOG_INFO("SinglePulseTimer<" + getId() + ">::threadFunc entered "+ getId());
 
   std::unique_lock<std::mutex> lk(cv_m);
 
@@ -62,5 +62,5 @@ void SinglePulseTimer::threadFunc(CBtype callBack, void* obj, std::time_t interv
     callBack(obj,cond);
   }
 
-  LOG_INFO("SinglePulseTimer::threadFunc exited");
+  LOG_INFO("SinglePulseTimer<" + getId() + ">::threadFunc exited");
 }
