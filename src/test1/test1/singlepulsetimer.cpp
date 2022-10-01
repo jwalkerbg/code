@@ -37,7 +37,7 @@ SinglePulseTimer::~SinglePulseTimer()
 
 void SinglePulseTimer::setSinglePulseTimer(CBtype callBack, void* obj, std::time_t interval)
 {
-   th = std::thread(&SinglePulseTimer::threadFunc, this, callBack, obj, interval);
+  th = std::thread(&SinglePulseTimer::threadFunc, this, callBack, obj, interval);
 }
 
 void SinglePulseTimer::threadFunc(CBtype callBack, void* obj, std::time_t interval)
