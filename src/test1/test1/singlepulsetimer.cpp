@@ -1,6 +1,6 @@
 #include <iostream>
 #include "singlepulsetimer.h"
-#include "logger.h"
+#include "Logger.h"
 
 SinglePulseTimer::SinglePulseTimer():
   stopTimer(false),
@@ -37,7 +37,7 @@ SinglePulseTimer::~SinglePulseTimer()
 
 void SinglePulseTimer::setSinglePulseTimer(CBtype callBack, void* obj, std::time_t interval)
 {
-  th = std::thread(&SinglePulseTimer::threadFunc, this, callBack, obj, interval);
+  th = std::thread(mem_fn(&SinglePulseTimer::threadFunc), this, callBack, obj, interval);
 }
 
 void SinglePulseTimer::threadFunc(CBtype callBack, void* obj, std::time_t interval)
@@ -64,3 +64,10 @@ void SinglePulseTimer::threadFunc(CBtype callBack, void* obj, std::time_t interv
 
   LOG_INFO("SinglePulseTimer<" + getId() + ">::threadFunc exited");
 }
+
+///////////////////
+
+
+
+
+
