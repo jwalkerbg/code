@@ -11,7 +11,7 @@
 #include <regex>
 
 #include "singlepulsetimer.h"
-#include "logger.h"
+#include "Logger.h"
 
 using namespace std;
 
@@ -331,6 +331,7 @@ int main()
     SptUser sptu;
     SptUser sptv;
 
+    /*
     // start via constructor
     std::string sputut = "sptut";
     std::string sputvt = "sptvt";
@@ -376,7 +377,16 @@ int main()
     if (sptut.GetThreadObject().joinable()) {
       sptut.GetThreadObject().join();
     }
+*/
+    Logger::LogMessage("************ Templatized timer examples *******************");
 
+    SinglePulseTimerT<class SptUser> sptutT;
+
+    sptutT.setSinglePulseTimer(&sptu,&sptu.callback,5);
+
+    if (sptutT.GetThreadObject().joinable()) {
+      sptutT.GetThreadObject().join();
+    }
 #endif  // defined(USE_SPT_CLASS)
 
     return 0;
