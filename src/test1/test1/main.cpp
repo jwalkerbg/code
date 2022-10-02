@@ -331,7 +331,6 @@ int main()
     SptUser sptu;
     SptUser sptv;
 
-    /*
     // start via constructor
     std::string sputut = "sptut";
     std::string sputvt = "sptvt";
@@ -344,13 +343,13 @@ int main()
 
     // comment following two lines to see timeouted exit
     // std::this_thread::sleep_for(std::chrono::seconds(2));
-    // sptut.PrematureFinish();
+    // sptut.prematureFinish();
 
-    if (sptut.GetThreadObject().joinable()) {
-      sptut.GetThreadObject().join();
+    if (sptut.getThreadObject().joinable()) {
+      sptut.getThreadObject().join();
     }
-    if (sptvt.GetThreadObject().joinable()) {
-      sptvt.GetThreadObject().join();
+    if (sptvt.getThreadObject().joinable()) {
+      sptvt.getThreadObject().join();
     }
 
     {
@@ -368,24 +367,26 @@ int main()
 
     std::this_thread::sleep_for(std::chrono::seconds(8));
 
-    if (sptut.GetThreadObject().joinable()) {
-      sptut.GetThreadObject().join();
+    if (sptut.getThreadObject().joinable()) {
+      sptut.getThreadObject().join();
     }
 
     sptut.setSinglePulseTimer(SptUser::cbWrapper,&sptu,5);
 
-    if (sptut.GetThreadObject().joinable()) {
-      sptut.GetThreadObject().join();
+    if (sptut.getThreadObject().joinable()) {
+      sptut.getThreadObject().join();
     }
-*/
+
     Logger::LogMessage("************ Templatized timer examples *******************");
 
+    std::string sptutTid = "sptutT";
     SinglePulseTimerT<class SptUser> sptutT;
+    sptutT.setId(sptutTid);
 
     sptutT.setSinglePulseTimer(&sptu,&sptu.callback,5);
 
-    if (sptutT.GetThreadObject().joinable()) {
-      sptutT.GetThreadObject().join();
+    if (sptutT.getThreadObject().joinable()) {
+      sptutT.getThreadObject().join();
     }
 #endif  // defined(USE_SPT_CLASS)
 

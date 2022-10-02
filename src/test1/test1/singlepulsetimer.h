@@ -31,25 +31,26 @@ private:
 
 public:
   // use GetThreadObject() to access th object (needed for join / joinable par example)
-  std::thread& GetThreadObject() { return th; }
+  std::thread& getThreadObject() { return th; }
 private:
   std::thread th;
-  void threadFunc(CBtype callBack, void* obj, std::time_t interval);
+  void threadFunc(CBtype callback, void* obj, std::time_t interval);
 
 public:
-  void SetStopTimer(bool what) { stopTimer = what; }
-  bool GetStopTimer() { return stopTimer; }
+  void setStopTimer(bool what) { stopTimer = what; }
+  bool getStopTimer() { return stopTimer; }
 private:
   bool stopTimer;
 
 public:
   bool isExprired() { return expired; }
+  void clearExpired() { expired = false; }
 private:
-  void SetExpired(bool what) { expired = what; }
+  void setExpired(bool what) { expired = what; }
   bool expired;
 
 public:
-  void PrematureFinish() { SetStopTimer(true); cv.notify_one(); };
+  void PrematureFinish() { setStopTimer(true); cv.notify_one(); };
 private:
   std::condition_variable cv;
   std::mutex cv_m;
@@ -60,8 +61,22 @@ private:
 template <class T>
 class SinglePulseTimerT {
 public:
-  SinglePulseTimerT(): stopTimer(false), expired(false) { Logger::LogMessage("SinglePulseTimer::SinglePulseTimer() Constructor executed"); };
-  SinglePulseTimerT(std::string& value) { setId(value); }
+  SinglePulseTimerT(): stopTimer(false), expired(false) {
+    Logger::LogMessage("SinglePulseTimer::SinglePulseTimer() Constructor executed");
+  };
+  SinglePulseTimerT(std::string& value): stopTimer(false), expired(false) {
+    Logger::LogMessage("SinglePulseTimer::SinglePulseTimer() Constructor executed"); setId(value);
+    setId(value);
+  }
+  SinglePulseTimerT(T* obj, CBtype callback, std::time_t interval): stopTimer(false), expired(false) {
+    LOG_INFO("SinglePulseTimerT::SinglePulseTimer(T* obj, CBtype callBack, std::time_t interval) Constructor executed");
+    setSinglePulseTimer(obj,callback,interval);
+  }
+  SinglePulseTimerT(std::string& value, T* obj, CBtype callBack, std::time_t interval): stopTimer(false), expired(false) {
+    LOG_INFO("std::string& value, T* obj, CBtype callBack, std::time_t interval) Constructor executed");
+    setId(value);
+    setSinglePulseTimer(obj,callBack,interval);
+  }
   ~SinglePulseTimerT() { };
 
 public:
@@ -81,10 +96,10 @@ public:
 
 public:
   // use GetThreadObject() to access th object (needed for join / joinable par example)
-  std::thread& GetThreadObject() { return th; }
+  std::thread& getThreadObject() { return th; }
 private:
   std::thread th;
-  void threadFunc(T* obj, callBackType callBack, std::time_t interval)
+  void threadFunc(T* obj, callBackType callback, std::time_t interval)
   {
     Logger::LogMessage("SinglePulseTimer<" + getId() + ">::threadFunc entered "+ getId());
 
@@ -93,37 +108,38 @@ private:
     auto end_time = std::chrono::steady_clock::now();
     end_time += std::chrono::seconds(interval);
 
-    SetStopTimer(false);
-    SetExpired(false);
-    bool cond = cv.wait_until(lk, end_time, [this]{return GetStopTimer();});
+    setStopTimer(false);
+    setExpired(false);
+    bool cond = cv.wait_until(lk, end_time, [this]{return getStopTimer();});
 
-    SetStopTimer(false);
+    setStopTimer(false);
 
     // if callbck function is supplied, call it now.
     // if not supplied, use isExpired() to see how the timer has exited
-    SetExpired(!cond);
+    setExpired(!cond);
 
-    if (callBack) {
-      (obj->*callBack)(cond);
+    if (callback) {
+      (obj->*callback)(cond);
     }
 
     Logger::LogMessage("SinglePulseTimer<" + getId() + ">::threadFunc exited");
   }
 
 public:
-  void SetStopTimer(bool what) { stopTimer = what; }
-  bool GetStopTimer() { return stopTimer; }
+  void setStopTimer(bool what) { stopTimer = what; }
+  bool getStopTimer() { return stopTimer; }
 private:
   bool stopTimer;
 
 public:
   bool isExprired() { return expired; }
+  void clearExpired() { expired = false; }
 private:
-  void SetExpired(bool what) { expired = what; }
+  void setExpired(bool what) { expired = what; }
   bool expired;
 
 public:
-  void PrematureFinish() { SetStopTimer(true); cv.notify_one(); };
+  void prematureFinish() { setStopTimer(true); cv.notify_one(); };
 private:
   std::condition_variable cv;
   std::mutex cv_m;
