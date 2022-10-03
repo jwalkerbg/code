@@ -62,10 +62,10 @@ template <class T>
 class SinglePulseTimerT {
 public:
   SinglePulseTimerT(): stopTimer(false), expired(false) {
-    Logger::LogMessage("SinglePulseTimer::SinglePulseTimer() Constructor executed");
+    Logger::LogMessage("SinglePulseTimerT::SinglePulseTimerT() Constructor executed");
   };
   SinglePulseTimerT(std::string& value): stopTimer(false), expired(false) {
-    Logger::LogMessage("SinglePulseTimer::SinglePulseTimer() Constructor executed"); setId(value);
+    Logger::LogMessage("SinglePulseTimerT::SinglePulseTimerT() Constructor executed"); setId(value);
     setId(value);
   }
   SinglePulseTimerT(T* obj, CBtype callback, std::time_t interval): stopTimer(false), expired(false) {
@@ -73,11 +73,11 @@ public:
     setSinglePulseTimer(obj,callback,interval);
   }
   SinglePulseTimerT(std::string& value, T* obj, CBtype callBack, std::time_t interval): stopTimer(false), expired(false) {
-    LOG_INFO("std::string& value, T* obj, CBtype callBack, std::time_t interval) Constructor executed");
+    LOG_INFO("SinglePulseTimerT::SinglePulseTimer(std::string& value, T* obj, CBtype callBack, std::time_t interval) Constructor executed");
     setId(value);
     setSinglePulseTimer(obj,callBack,interval);
   }
-  ~SinglePulseTimerT() { };
+  ~SinglePulseTimerT() { LOG_INFO("SinglePulseTimerT::~SinglePulseTimerT() Destructor executed"); };
 
 public:
   void setId(std::string& value) { id = value; }
@@ -101,7 +101,7 @@ private:
   std::thread th;
   void threadFunc(T* obj, callBackType callback, std::time_t interval)
   {
-    Logger::LogMessage("SinglePulseTimer<" + getId() + ">::threadFunc entered "+ getId());
+    Logger::LogMessage("SinglePulseTimerT<" + getId() + ">::threadFunc entered "+ getId());
 
     std::unique_lock<std::mutex> lk(cv_m);
 
@@ -122,7 +122,7 @@ private:
       (obj->*callback)(cond);
     }
 
-    Logger::LogMessage("SinglePulseTimer<" + getId() + ">::threadFunc exited");
+    Logger::LogMessage("SinglePulseTimerT<" + getId() + ">::threadFunc exited");
   }
 
 public:
