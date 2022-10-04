@@ -11,7 +11,7 @@
 #include <regex>
 
 #include "singlepulsetimer.h"
-#include "logger.h"
+#include "Logger.h"
 
 using namespace std;
 
@@ -333,22 +333,24 @@ int main()
     SptUser sptv;
 
     // start via constructor
-    SinglePulseTimer sptut(SptUser::cbWrapper,&sptu,7);
-    SinglePulseTimer sptvt(SptUser::cbWrapper,&sptv,7);
+    std::string sputut = "sptut";
+    std::string sputvt = "sptvt";
+    SinglePulseTimer sptut(sputut, SptUser::cbWrapper,&sptu,7);
+    SinglePulseTimer sptvt(sputvt, SptUser::cbWrapper,&sptv,7);
 
     // postponed start via method
-    // SinglePulseTimer spt;
+    // SinglePulseTimer sptut;
     // sptut.setSinglePulseTimer(SptUser::cbWrapper,&sptu,7);
 
     // comment following two lines to see timeouted exit
     // std::this_thread::sleep_for(std::chrono::seconds(2));
-    // sptut.PrematureFinish();
+    // sptut.prematureFinish();
 
-    if (sptut.GetThreadObject().joinable()) {
-      sptut.GetThreadObject().join();
+    if (sptut.getThreadObject().joinable()) {
+      sptut.getThreadObject().join();
     }
-    if (sptvt.GetThreadObject().joinable()) {
-      sptvt.GetThreadObject().join();
+    if (sptvt.getThreadObject().joinable()) {
+      sptvt.getThreadObject().join();
     }
 
     {
@@ -362,6 +364,31 @@ int main()
       LOG_INFO(str.str());
     }
 
+    sptut.setSinglePulseTimer(SptUser::cbWrapper,&sptu,5);
+
+    std::this_thread::sleep_for(std::chrono::seconds(8));
+
+    if (sptut.getThreadObject().joinable()) {
+      sptut.getThreadObject().join();
+    }
+
+    sptut.setSinglePulseTimer(SptUser::cbWrapper,&sptu,5);
+
+    if (sptut.getThreadObject().joinable()) {
+      sptut.getThreadObject().join();
+    }
+
+    Logger::LogMessage("************ Templatized timer examples *******************");
+
+    std::string sptutTid = "sptutT";
+    SinglePulseTimerT<class SptUser> sptutT;
+    sptutT.setId(sptutTid);
+
+    sptutT.setSinglePulseTimer(&sptu,&sptu.callback,5);
+
+    if (sptutT.getThreadObject().joinable()) {
+      sptutT.getThreadObject().join();
+    }
 #endif  // defined(USE_SPT_CLASS)
 
 #if defined(USE_TIME_FUNCTIONS)
