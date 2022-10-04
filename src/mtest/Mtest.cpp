@@ -163,13 +163,13 @@ void Mtest::runTest(int testId, int run, VJson& payload)
   LOG_INFO(str.str());
 
   switch (testId) {
-  case 1: // start Bakhoor mode
+  case 1:
     test_1();
     break;
   case 2:
     test_2();
     break;
-  case 3: // stop Bakhoor mode
+  case 3:
     test_3();
     break;
   default:
@@ -215,3 +215,7 @@ void Mtest::answer(int testId, VJson& payload)
   }
 
 // helpers
+
+
+// End of Mtest.cpp
+
