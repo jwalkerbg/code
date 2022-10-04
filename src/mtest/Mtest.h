@@ -35,6 +35,9 @@ public:
   std::string& GetMtestId() { return mtestId; }
 private:
   std::string mtestId;
+
+public:
+  QModel& getModel() { return tags; }
 protected:
   QModel tags;
 
@@ -69,7 +72,7 @@ protected:
 // A pointer to a object of the class under test is passed as an argument owner_
 // of the constructor.
 
-class Mtest : MtestBase {
+class Mtest : public MtestBase {
 public:
   Mtest(const std::string id, const std::string model, void* owner_);
   ~Mtest();
