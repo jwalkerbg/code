@@ -38,8 +38,15 @@ private:
 
 public:
   QModel& getModel() { return tags; }
+  void publishMessage(const char* topic, const char* message, int qos = 0);
 protected:
   QModel tags;
+
+public:
+  void setPublishEnabled(bool value) { publishEnabled = value; }
+  bool getPublishEnabled() { return publishEnabled; }
+private:
+  bool publishEnabled;
 
 public:
   void SetQoS(int QoS) { m_QoS = QoS; }

@@ -11,7 +11,8 @@
 #include "Mtest.h"
 
 MtestBase::MtestBase(const std::string id, const std::string model):
-tags(model.c_str())
+tags(model.c_str()),
+publishEnabled(false)
 {
   mtestId = id;
   SetQoS(DEFAULT_QOS);
@@ -21,6 +22,13 @@ tags(model.c_str())
 MtestBase::~MtestBase()
 {
   LOG_INFO("~MtestBase() Destructor executed");
+}
+
+void MtestBase::publishMessage(const char* topic, const char* message, int qos)
+{
+  if (getPublishEnabled()) {
+    getModel().publishMessage(topic,message,qos);
+  }
 }
 
 std::string MtestBase::strTopics[] = { "MTEST/SETUP", "MTEST/RUN", "MTEST/TEARDOWN", "MTEST/ANS", "" };
