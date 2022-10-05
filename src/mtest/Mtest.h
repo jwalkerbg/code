@@ -99,7 +99,7 @@ private:
 // tests
 // this is application specific part
 // These tests may contain everithing that is useful
-// Each of these function is assigned testId (the first argument of runTest())
+// Each of these functions is assigned testId (the first argument of runTest())
 
   void test_1();
   void test_2();
@@ -108,7 +108,7 @@ private:
   void test_default();
 
 // helpers
-// Here some helper functions may be defined taht may be used from the tests
+// Here some helper functions may be defined that may be used by the tests
 
 };
 

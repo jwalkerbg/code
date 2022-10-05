@@ -121,7 +121,7 @@ void MtestBase::dispatch(const char *topic, const std::string &message)
     tearDown(testId,payload);
     break;
   case 3: // "@MTEST/ANS"
-    LOG_INFO("@/MTEST/TEARDOWN");
+    LOG_INFO("@/MTEST/ANS");
     break;
   default:
     LOG_INFO("Unknown topic received by MTEST");
