@@ -24,7 +24,7 @@ using namespace std;
 //#define USE_SEARCH_FOR_SET_OF_STRINGS
 //#define USE_STOI
 //#define USE_SPT
-#define USE_SPT_CLASS
+//#define USE_SPT_CLASS
 #define USE_TIME_FUNCTIONS
 
 #if defined(USE_STATIC_MEMBER_FUNC)
@@ -425,9 +425,9 @@ int main()
     bkStart.tm_sec = 0;
 
     std::tm bkEnd{};
-    bkEnd.tm_hour = 13;
-    bkEnd.tm_min = 0;
-    bkEnd.tm_sec = 0;
+    bkEnd.tm_hour = 23;
+    bkEnd.tm_min = 59;
+    bkEnd.tm_sec = 59;
 
     // check to see if local is in [bkStart .. bkEnd]
     int bkStart_i = bkStart.tm_hour * (60*60) + bkStart.tm_min * 60 + bkStart.tm_sec;
