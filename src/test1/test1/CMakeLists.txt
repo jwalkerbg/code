@@ -5,4 +5,7 @@ project(test1 LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
-add_executable(test1 main.cpp singlepulsetimer.cpp Logger.cpp)
+set(SOURCE_FILES main.cpp singlepulsetimer.cpp Logger.cpp)
+set(HEADER_FILES Logger.h singlepulsetimer.h)
+
+add_executable(test1 ${SOURCE_FILES} ${HEADER_FILES})
