@@ -26,7 +26,8 @@ using namespace std;
 //#define USE_STOI
 //#define USE_SPT
 //#define USE_SPT_CLASS
-#define USE_TIME_FUNCTIONS
+//#define USE_TIME_FUNCTIONS
+#define USE_TIME_INCREMENT
 
 #if defined(USE_STATIC_MEMBER_FUNC)
 class CMyClass
@@ -125,6 +126,10 @@ void SptUser::callback(bool how)
 }
 
 #endif  // defined(USE_SPT_CLASS)
+
+#if defined(USE_TIME_INCREMENT)
+void TimeIncrement();
+#endif  // defined(USE_TIME_INCREMENT)
 
 int main()
 {
@@ -466,6 +471,11 @@ int main()
 
 #endif  // defined(USE_TIME_FUNCTIONS)
 
+#if defined(USE_TIME_INCREMENT)
+
+
+#endif  // defined(USE_TIME_INCREMENT)
+
     std::cout << "Stop" << std::endl;
 
     return 0;
@@ -580,6 +590,39 @@ void WithTimer::stopper()
 
 ///////////////////
 
-
-
 #endif  // defined(USE_SPT)
+
+#if defined(USE_TIME_INCREMENT)
+
+// Bukhoor maximum active time
+#define BUKHOOR_MIN_ACTIVE_TIME (5*60)
+#define BUKHOOR_MAX_ACTIVE_TIME (15*60)
+#define BUKHOOR_INCREASE_STEP (5*60)
+void TimeIncrement()
+{
+  std::time_t bhInterval = 10 * 60;
+
+  auto start_time = std::chrono::steady_clock::now();
+  auto end_time = start_time + std::chrono::seconds(bhInterval);
+
+  this_thread::sleep_for(std::chrono::seconds(10));
+
+  auto this_time = std::chrono::steady_clock::now();
+  auto remaining_time = end_time - this_time;
+  auto added_time = std::chrono::seconds(BUKHOOR_MAX_ACTIVE_TIME) - remaining_time;
+
+  if (added_time >= std::chrono::seconds(BUKHOOR_INCREASE_STEP)) {
+    end_time += std::chrono::seconds(BUKHOOR_INCREASE_STEP);
+  }
+  else {
+    end_time += added_time;
+  }
+
+  std::cout << "start_time: " << std::endl;
+
+
+
+}
+
+#endif  // defined(USE_TIME_INCREMENT)
+
