@@ -1,3 +1,4 @@
+#include <iomanip>
 #include <iostream>
 #include <iterator>
 #include <ctime>
@@ -441,7 +442,31 @@ int main()
       LOG_INFO("We are out!");
     }
 
+// lets test std:tm --> std::time_t
+
+    std::tm tms;
+    tms.tm_hour = 2;
+    tms.tm_min = 0;
+    tms.tm_sec = 0;
+    tms.tm_mday = 5;
+    tms.tm_mon = 2; // March
+    tms.tm_year = 2022 - 1900;
+    tms.tm_isdst = 0; // no daylight - standard time
+
+    std::time_t tm_local = mktime(&tms);
+    std::tm gmt = *std::gmtime(&tm_local);
+    std::tm lct = *std::localtime(&tm_local);
+
+    std::time_t gmt_calculated = mktime(&gmt);
+
+    std::cout << "gmt_calculated: " << gmt_calculated << " tmv_2_local: " << tm_local << std::endl;
+
+//    std::cout << "UTC:  " << std::put_time(std::gmtime(&tmv_1_t), "%c %Z") << std::endl;
+//    std::cout << "UTC:  " << std::put_time(std::localtime(&tmv_1_t), "%c %Z") << std::endl;
+
 #endif  // defined(USE_TIME_FUNCTIONS)
+
+    std::cout << "Stop" << std::endl;
 
     return 0;
 }
