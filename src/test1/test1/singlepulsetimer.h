@@ -86,10 +86,9 @@ private:
   std::string id;
 
 public:
-  //typedef std::function<void (T::*)(bool)> callBackType;
-  using callBackType = void (T::*)(bool);
+  using callbackType = void (T::*)(bool);
   // Activates timer for the specified time interval and call specified callback.
-  void setSinglePulseTimer(T* obj, callBackType callBack, std::time_t interval)
+  void setSinglePulseTimer(T* obj, callbackType callBack, std::time_t interval)
   {
     th = std::thread(&SinglePulseTimerT::threadFunc, this, obj, callBack, interval);
   }
@@ -99,7 +98,7 @@ public:
   std::thread& getThreadObject() { return th; }
 private:
   std::thread th;
-  void threadFunc(T* obj, callBackType callback, std::time_t interval)
+  void threadFunc(T* obj, callbackType callback, std::time_t interval)
   {
     Logger::LogMessage("SinglePulseTimerT<" + getId() + ">::threadFunc entered "+ getId());
 
@@ -118,7 +117,7 @@ private:
     // if not supplied, use isExpired() to see how the timer has exited
     setExpired(!cond);
 
-    if (callback) {
+    if ((nullptr != obj) && (nullptr != callback)) {
       (obj->*callback)(cond);
     }
 

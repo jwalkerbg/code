@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <iomanip>
 #include <iostream>
 #include <iterator>
@@ -473,6 +474,7 @@ int main()
 
 #if defined(USE_TIME_INCREMENT)
 
+    TimeIncrement();
 
 #endif  // defined(USE_TIME_INCREMENT)
 
@@ -600,17 +602,23 @@ void WithTimer::stopper()
 #define BUKHOOR_INCREASE_STEP (5*60)
 void TimeIncrement()
 {
-  std::time_t bhInterval = 10 * 60;
+  std::time_t bhInterval = 15 * 60; // seconds
 
   auto start_time = std::chrono::steady_clock::now();
   auto end_time = start_time + std::chrono::seconds(bhInterval);
 
-  this_thread::sleep_for(std::chrono::seconds(10));
+  std::cout << "Old Bukhoor time is " << std::chrono::duration_cast<std::chrono::seconds>(end_time-start_time).count() << std::endl;
+
+  this_thread::sleep_for(std::chrono::seconds(3));
 
   auto this_time = std::chrono::steady_clock::now();
   auto remaining_time = end_time - this_time;
+  std::cout << "remaining_time is " << std::chrono::duration_cast<std::chrono::seconds>(remaining_time).count() << std::endl;
   auto added_time = std::chrono::seconds(BUKHOOR_MAX_ACTIVE_TIME) - remaining_time;
 
+  std::cout << "added time is " << std::chrono::duration_cast<std::chrono::seconds>(added_time).count() << std::endl;
+
+  auto old_end_time = end_time;
   if (added_time >= std::chrono::seconds(BUKHOOR_INCREASE_STEP)) {
     end_time += std::chrono::seconds(BUKHOOR_INCREASE_STEP);
   }
@@ -618,10 +626,14 @@ void TimeIncrement()
     end_time += added_time;
   }
 
-  std::cout << "start_time: " << std::endl;
+  std::cout << "New Bukhoor time is " << std::chrono::duration_cast<std::chrono::seconds>(end_time-start_time).count() << std::endl;
 
+  std::cout << std::endl;
 
+  std::cout << "old_end_time is " << old_end_time.time_since_epoch().count() << std::endl;
+  std::cout << "end_time is " << end_time.time_since_epoch().count() << std::endl;
 
+  std::cout << std::chrono::microseconds(std::chrono::seconds(1)).count() << std::endl;
 }
 
 #endif  // defined(USE_TIME_INCREMENT)
