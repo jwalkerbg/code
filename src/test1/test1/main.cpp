@@ -29,7 +29,9 @@ using namespace std;
 //#define USE_SPT_CLASS
 //#define USE_TIME_FUNCTIONS
 //#define USE_TIME_INCREMENT
-#define USE_CLASS_CONS_DEST
+//#define USE_CLASS_CONS_DEST
+//#define USE_SPT_TEMPLATIZED_CLASS
+#define USE_GET_LOCAL_AND_UTC_TIME
 
 #if defined(USE_STATIC_MEMBER_FUNC)
 class CMyClass
@@ -135,6 +137,14 @@ void TimeIncrement();
 #if defined(USE_CLASS_CONS_DEST)
 void class_cons_dest();
 #endif  // defined(USE_CLASS_CONS_DEST)
+
+#if defined(USE_SPT_TEMPLATIZED_CLASS)
+void use_spt_templatized();
+#endif  // defined(USE_SPT_TEMPLATIZED_CLASS)
+
+#if defined(USE_GET_LOCAL_AND_UTC_TIME)
+void GetLocalAndUTCTime();
+#endif  // defined(USE_GET_LOCAL_AND_UTC_TIME)
 
 int main()
 {
@@ -495,6 +505,16 @@ int main()
 
 #endif  // defined(USE_CLASS_CONS_DEST)
 
+#if defined(USE_SPT_TEMPLATIZED_CLASS)
+
+  use_spt_templatized();
+
+#endif  // defined(USE_SPT_TEMPLATIZED_CLASS)
+
+#if defined(USE_GET_LOCAL_AND_UTC_TIME)
+  GetLocalAndUTCTime();
+#endif  // defined(USE_GET_LOCAL_AND_UTC_TIME)
+
     std::cout << "Stop" << std::endl;
 
     return 0;
@@ -698,3 +718,49 @@ void class_cons_dest()
 
 #endif  // defined(USE_CLASS_CONS_DEST)
 
+#if defined(USE_SPT_TEMPLATIZED_CLASS)
+
+class ClassWithTimer {
+public:
+  ClassWithTimer() {};
+  ~ClassWithTimer() {};
+
+  // callback to be called at the end
+  void callback(bool how);
+};
+
+void ClassWithTimer::callback(bool how)
+{
+  std::string str("void ClassWithTimer::callback(bool how): ");
+  Logger::LogMessage(str + (how ? "premature" : "timeout"));
+}
+
+//std::mutex ClassWithTimer::cblock;
+
+
+void use_spt_templatized()
+{
+  ClassWithTimer obj;
+  SinglePulseTimerT<ClassWithTimer> timer;
+
+  auto tp1 = std::chrono::steady_clock::now();
+  timer.setSinglePulseTimer(&obj,obj.callback,5);
+  if (timer.getThreadObject().joinable()) {
+    timer.getThreadObject().join();
+  }
+  auto tp2 = std::chrono::steady_clock::now();
+
+  auto int_ms = std::chrono::duration_cast<std::chrono::milliseconds>(tp2 - tp1);
+  std::cout << " tp2 - tp1 in milliseconds: " << int_ms.count() << std::endl;
+}
+
+#endif  // defined(USE_SPT_TEMPLATIZED_CLASS)
+
+#if defined(USE_GET_LOCAL_AND_UTC_TIME)
+
+void GetLocalAndUTCTime()
+{
+
+}
+
+#endif  // defined(USE_GET_LOCAL_AND_UTC_TIME)
