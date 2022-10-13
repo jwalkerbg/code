@@ -28,7 +28,8 @@ using namespace std;
 //#define USE_SPT
 //#define USE_SPT_CLASS
 //#define USE_TIME_FUNCTIONS
-#define USE_TIME_INCREMENT
+//#define USE_TIME_INCREMENT
+#define USE_CLASS_CONS_DEST
 
 #if defined(USE_STATIC_MEMBER_FUNC)
 class CMyClass
@@ -131,6 +132,9 @@ void SptUser::callback(bool how)
 #if defined(USE_TIME_INCREMENT)
 void TimeIncrement();
 #endif  // defined(USE_TIME_INCREMENT)
+#if defined(USE_CLASS_CONS_DEST)
+void class_cons_dest();
+#endif  // defined(USE_CLASS_CONS_DEST)
 
 int main()
 {
@@ -313,7 +317,14 @@ int main()
 #if defined(USE_SPT)
     WithTimer bh;
 
+    //bh.cv.notify_one();
+    //bh.cv.notify_one();
+    //bh.cv.notify_one();
+    //bh.cv.notify_one();
+
+    LOG_INFO("before bh.setGuardTimer();");
     bh.setGuardTimer();
+    LOG_INFO("after bh.setGuardTimer();");
 
     // comment or uncomment next line to see how the timer waits its full time or is
     // terminated after about 3 seconds (the time stopper() sleep before notifying)
@@ -478,6 +489,12 @@ int main()
 
 #endif  // defined(USE_TIME_INCREMENT)
 
+#if defined(USE_CLASS_CONS_DEST)
+
+  class_cons_dest();
+
+#endif  // defined(USE_CLASS_CONS_DEST)
+
     std::cout << "Stop" << std::endl;
 
     return 0;
@@ -557,7 +574,6 @@ void WithTimer::guardTimerThread(std::function<void(void)> callBack, std::time_t
   auto ff = chrono::seconds(bhInterval);
   LOG_INFO(ff.count());
 
-
   while (!stopGuardTimer) {
     //if (!cv.wait_until(lk, end_time, [this]{return stopGuardTimer;})) {
     bool cond = cv.wait_until(lk, end_time, [this]{return stopGuardTimer;});
@@ -586,6 +602,10 @@ void WithTimer::stopper()
     std::lock_guard<std::mutex> lk(sgtm);
     stopGuardTimer = true;
   }
+  LOG_INFO("Multiple cv.notify()");
+  cv.notify_one();
+  cv.notify_one();
+  cv.notify_one();
   cv.notify_one();
   LOG_INFO("WithTimer::stopper() exited");
 }
@@ -634,7 +654,47 @@ void TimeIncrement()
   std::cout << "end_time is " << end_time.time_since_epoch().count() << std::endl;
 
   std::cout << std::chrono::microseconds(std::chrono::seconds(1)).count() << std::endl;
+
+  std::cout << "steady clock to seconds conversion" << std::endl;
+
+  auto tp1 = std::chrono::steady_clock::now();
+  this_thread::sleep_for(std::chrono::seconds(4));
+  auto tp2 = std::chrono::steady_clock::now();
+
+  std::cout << " tp2 - tp1: " << tp2.time_since_epoch().count() - tp1.time_since_epoch().count() << std::endl;
+
+  auto int_s = std::chrono::duration_cast<std::chrono::seconds>(tp2 - tp1);
+
+  std::cout << " tp2 - tp1 in seconds: " << int_s.count() << std::endl;
 }
 
 #endif  // defined(USE_TIME_INCREMENT)
+
+#if defined(USE_CLASS_CONS_DEST)
+
+class Inner {
+public:
+  Inner() { LOG_INFO("Constructor Inner"); }
+  ~Inner() { LOG_INFO("Destructor Inner"); }
+  void Print() { LOG_INFO("Inner print"); };
+};
+
+class Owner {
+public:
+  Owner() { LOG_INFO("Constructor Owner"); }
+  ~Owner() { LOG_INFO("Destructor Owner"); }
+  void Print() { LOG_INFO("Owner print"); };
+
+  Inner inner;
+};
+
+void class_cons_dest()
+{
+  Owner obj;
+
+  obj.Print();
+  obj.inner.Print();
+}
+
+#endif  // defined(USE_CLASS_CONS_DEST)
 
