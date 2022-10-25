@@ -32,6 +32,7 @@ using namespace std;
 //#define USE_CLASS_CONS_DEST
 //#define USE_SPT_TEMPLATIZED_CLASS
 #define USE_GET_LOCAL_AND_UTC_TIME
+//#define USE_DYNAMIC_POINTER_CAST
 
 #if defined(USE_STATIC_MEMBER_FUNC)
 class CMyClass
@@ -77,7 +78,7 @@ public:
     std::thread worker;
     std::condition_variable cv;
     std::mutex sgtm;
-    bool stopGuardTimer;
+    bool GuardTimer;
 
     // callback function when the guard timer expires
     void reset();
@@ -145,6 +146,10 @@ void use_spt_templatized();
 #if defined(USE_GET_LOCAL_AND_UTC_TIME)
 void GetLocalAndUTCTime();
 #endif  // defined(USE_GET_LOCAL_AND_UTC_TIME)
+
+#if defined(USE_DYNAMIC_POINTER_CAST)
+void DynamicCast();
+#endif  // defined(USE_DYNAMIC_POINTER_CAST)
 
 int main()
 {
@@ -515,6 +520,10 @@ int main()
   GetLocalAndUTCTime();
 #endif  // defined(USE_GET_LOCAL_AND_UTC_TIME)
 
+#if defined(USE_DYNAMIC_POINTER_CAST)
+  DynamicCast();
+#endif  // defined(USE_DYNAMIC_POINTER_CAST)
+
     std::cout << "Stop" << std::endl;
 
     return 0;
@@ -758,9 +767,80 @@ void use_spt_templatized()
 
 #if defined(USE_GET_LOCAL_AND_UTC_TIME)
 
+std::time_t local_to_utc(std::time_t local);
+
 void GetLocalAndUTCTime()
 {
+  std::time_t local = std::time(nullptr);
+  auto utc = local_to_utc(local);
+  std::cout << "Local: " << local << std::endl <<
+               "  UTC: " << utc << std::endl <<
+               " diff: " << std::setw(10) << abs(local - utc) << std::endl;
+}
 
+std::time_t local_to_utc(std::time_t local)
+{
+  auto local_field = *std::gmtime(&local);
+  local_field.tm_isdst = -1;
+  auto utc = std::mktime(&local_field);
+  return utc;
 }
 
 #endif  // defined(USE_GET_LOCAL_AND_UTC_TIME)
+
+#if defined(USE_DYNAMIC_POINTER_CAST)
+
+struct Base
+{
+    int a;
+    virtual void f() const { std::cout << "I am base!\n";}
+    virtual ~Base(){}
+};
+
+struct Derived : Base
+{
+    void f() const override
+    { std::cout << "I am derived!\n"; }
+    ~Derived(){}
+};
+
+void DynamicCast()
+{
+  auto basePtr = std::make_shared<Base>();
+  std::cout << "Base pointer says: ";
+  basePtr->f();
+
+  auto basePtr2 = basePtr;
+
+  auto derivedPtr = std::make_shared<Derived>();
+  std::cout << "Derived pointer says: ";
+  derivedPtr->f();
+
+  // static_pointer_cast to go up class hierarchy
+  basePtr = std::static_pointer_cast<Base>(derivedPtr);
+  std::cout << "Base pointer to derived says: ";
+  basePtr->f();
+
+  // dynamic_pointer_cast to go down/across class hierarchy
+  auto downcastedPtr = std::dynamic_pointer_cast<Derived>(basePtr);
+  if(downcastedPtr)
+  {
+      std::cout << "Downcasted pointer says: ";
+      downcastedPtr->f();
+  }
+
+  auto downcastedPtr2 = std::dynamic_pointer_cast<Base>(basePtr2);
+  if(downcastedPtr2)
+  {
+      std::cout << "DowncastedPtr2 pointer says: ";
+      downcastedPtr2->f();
+  }
+
+  // All pointers to derived share ownership
+  std::cout << "Pointers to underlying derived: "
+          << derivedPtr.use_count()
+          << "\n";
+
+}
+
+#endif  // defined(USE_DYNAMIC_POINTER_CAST)
