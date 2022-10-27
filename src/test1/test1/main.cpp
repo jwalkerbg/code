@@ -772,10 +772,12 @@ std::time_t local_to_utc(std::time_t local);
 void GetLocalAndUTCTime()
 {
   std::time_t local = std::time(nullptr);
-  auto utc = local_to_utc(local);
-  std::cout << "Local: " << local << std::endl <<
-               "  UTC: " << utc << std::endl <<
-               " diff: " << std::setw(10) << abs(local - utc) << std::endl;
+  std::time_t endtime = local + 300;
+  auto utc = local_to_utc(endtime);
+  std::cout << "            Local: " << local << std::endl <<
+               "    endtime local: " << endtime << std::endl <<
+               "      endtime UTC: " << utc << std::endl <<
+               "             diff: " << std::setw(10) << abs(endtime - utc) << std::endl;
 }
 
 std::time_t local_to_utc(std::time_t local)
