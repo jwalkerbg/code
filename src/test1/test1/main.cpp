@@ -31,8 +31,12 @@ using namespace std;
 //#define USE_TIME_INCREMENT
 //#define USE_CLASS_CONS_DEST
 //#define USE_SPT_TEMPLATIZED_CLASS
-#define USE_GET_LOCAL_AND_UTC_TIME
+//#define USE_GET_LOCAL_AND_UTC_TIME
 //#define USE_DYNAMIC_POINTER_CAST
+//#define USE_TEST_sendCorrectedEndTime
+//#define USE_SYSTEM_CALL
+//#define USE_TEST_STRING_COMPARE
+#define USE_CATCH_OUTPUT
 
 #if defined(USE_STATIC_MEMBER_FUNC)
 class CMyClass
@@ -150,6 +154,22 @@ void GetLocalAndUTCTime();
 #if defined(USE_DYNAMIC_POINTER_CAST)
 void DynamicCast();
 #endif  // defined(USE_DYNAMIC_POINTER_CAST)
+
+#if defined(USE_TEST_sendCorrectedEndTime)
+void Test_sendCorrectedEndTime();
+#endif  // defined(USE_TEST_sendCorrectedEndTime)
+
+#if defined(USE_SYSTEM_CALL)
+void Test_systemCall();
+#endif  // defined(USE_SYSTEM_CALL)
+
+#if defined(USE_TEST_STRING_COMPARE)
+void Test_StringCompare();
+#endif // defined(USE_TEST_STRING_COMPARE)
+
+#if defined(USE_CATCH_OUTPUT)
+void Test_CatchOutput();
+#endif // defined(USE_CATCH_OUTPUT)
 
 int main()
 {
@@ -524,9 +544,25 @@ int main()
   DynamicCast();
 #endif  // defined(USE_DYNAMIC_POINTER_CAST)
 
-    std::cout << "Stop" << std::endl;
+#if defined(USE_TEST_sendCorrectedEndTime)
+  Test_sendCorrectedEndTime();
+#endif  // defined(USE_TEST_sendCorrectedEndTime)
 
-    return 0;
+#if defined(USE_SYSTEM_CALL)
+  Test_systemCall();
+#endif  // defined(USE_SYSTEM_CALL)
+
+#if defined(USE_TEST_STRING_COMPARE)
+  Test_StringCompare();
+#endif // defined(USE_TEST_STRING_COMPARE)
+
+#if defined(USE_CATCH_OUTPUT)
+  Test_CatchOutput();
+#endif // defined(USE_CATCH_OUTPUT)
+
+  std::cout << "Stop" << std::endl;
+
+  return 0;
 }
 
 #if defined(USE_SEARCH_FOR_SET_OF_STRINGS)
@@ -771,12 +807,10 @@ std::time_t local_to_utc(std::time_t local);
 
 void GetLocalAndUTCTime()
 {
-  std::time_t local = std::time(nullptr);
-  std::time_t endtime = local + 300;
-  auto utc = local_to_utc(endtime);
-  std::cout << "            Local: " << local << std::endl <<
-               "    endtime local: " << endtime << std::endl <<
-               "      endtime UTC: " << utc << std::endl <<
+  std::time_t utc = std::time(nullptr);
+  std::time_t endtime = utc + 300;
+  std::cout << "          endtime: " << endtime << std::endl <<
+               "              UTC: " << utc << std::endl <<
                "             diff: " << std::setw(10) << abs(endtime - utc) << std::endl;
 }
 
@@ -846,3 +880,67 @@ void DynamicCast()
 }
 
 #endif  // defined(USE_DYNAMIC_POINTER_CAST)
+
+#if defined(USE_TEST_sendCorrectedEndTime)
+void Test_sendCorrectedEndTime()
+{
+  int value = 166094509;
+  std::stringstream str;
+  str << "{\"$inp\":\"Local\",\"EndTime\":" << value << "}";
+
+  std::cout << "payload: " << str.str().c_str() << std::endl;
+}
+#endif  // defined(USE_TEST_sendCorrectedEndTime)
+
+#if defined(USE_SYSTEM_CALL)
+void Test_systemCall()
+{
+  int r;
+   r = ::system("ping 8.8.8.8");
+   std::cout << "r = " << r << std::endl;
+
+   r = ::system("ping 200.1.100.4");
+   std::cout << "r = " << r << std::endl;
+
+}
+#endif  // defined(USE_SYSTEM_CALL)
+
+#if defined(USE_TEST_STRING_COMPARE)
+void Test_StringCompare()
+{
+  std::string res = "Passed";
+
+  int r = res.compare("Passed");
+  std::cout << "Compare result = " << r << std::endl;
+}
+#endif // defined(USE_TEST_STRING_COMPARE)
+
+#if defined(USE_CATCH_OUTPUT)
+
+std::string GetStdoutFromCommand(string cmd)
+{
+  string data;
+  FILE * stream;
+  const int max_buffer = 256;
+  char buffer[max_buffer];
+  //cmd.append(" 2>&1");
+
+  stream = popen(cmd.c_str(), "r");
+  if (stream) {
+    while (!feof(stream))
+      if (fgets(buffer, max_buffer, stream) != NULL) data.append(buffer);
+    pclose(stream);
+  }
+  return data;
+}
+
+
+void Test_CatchOutput()
+{
+  std::string ls = GetStdoutFromCommand("dir ");
+  cout << "LS: " << ls << endl;
+
+}
+#endif // defined(USE_CATCH_OUTPUT)
+
+
