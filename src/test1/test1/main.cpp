@@ -36,7 +36,8 @@ using namespace std;
 //#define USE_TEST_sendCorrectedEndTime
 //#define USE_SYSTEM_CALL
 //#define USE_TEST_STRING_COMPARE
-#define USE_CATCH_OUTPUT
+//#define USE_CATCH_OUTPUT
+#define USE_TCCMD
 
 #if defined(USE_STATIC_MEMBER_FUNC)
 class CMyClass
@@ -170,6 +171,10 @@ void Test_StringCompare();
 #if defined(USE_CATCH_OUTPUT)
 void Test_CatchOutput();
 #endif // defined(USE_CATCH_OUTPUT)
+
+#if defined(USE_TCCMD)
+void Test_TCcmd();
+#endif
 
 int main()
 {
@@ -560,6 +565,10 @@ int main()
   Test_CatchOutput();
 #endif // defined(USE_CATCH_OUTPUT)
 
+#if defined(USE_TCCMD)
+  Test_TCcmd();
+#endif
+
   std::cout << "Stop" << std::endl;
 
   return 0;
@@ -943,4 +952,17 @@ void Test_CatchOutput()
 }
 #endif // defined(USE_CATCH_OUTPUT)
 
+#if defined(USE_TCCMD)
+void Test_TCcmd()
+{
+  std::string cmd;
+  std::string endpt = "\"http://network-test.debian.org/nm\"";
+  cmd = "curl -s -i --interface wwan0 " + endpt + " | grep -i \"is online\"";
+  cmd.append(" 2>&1");
 
+  std::cout << "The command is" << std::endl;
+  std::cout << cmd << std::endl;
+  std::cout << "-----------------------------" << std::endl;
+
+}
+#endif
