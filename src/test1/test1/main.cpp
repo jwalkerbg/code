@@ -37,7 +37,9 @@ using namespace std;
 //#define USE_SYSTEM_CALL
 //#define USE_TEST_STRING_COMPARE
 //#define USE_CATCH_OUTPUT
-#define USE_TCCMD
+//#define USE_TCCMD
+//#define USE_VECTOR_TO_JSON_ARRAY
+#define USE_POINTER_TO_PARENT
 
 #if defined(USE_STATIC_MEMBER_FUNC)
 class CMyClass
@@ -174,6 +176,14 @@ void Test_CatchOutput();
 
 #if defined(USE_TCCMD)
 void Test_TCcmd();
+#endif
+
+#if defined(USE_VECTOR_TO_JSON_ARRAY)
+void Test_Vector_toJSON_Array();
+#endif
+
+#if defined(USE_POINTER_TO_PARENT)
+void Test_Pointer_To_Parent();
 #endif
 
 int main()
@@ -569,6 +579,14 @@ int main()
   Test_TCcmd();
 #endif
 
+#if defined(USE_VECTOR_TO_JSON_ARRAY)
+  Test_Vector_toJSON_Array();
+#endif
+
+#if defined(USE_POINTER_TO_PARENT)
+  Test_Pointer_To_Parent();
+#endif
+
   std::cout << "Stop" << std::endl;
 
   return 0;
@@ -961,8 +979,75 @@ void Test_TCcmd()
   cmd.append(" 2>&1");
 
   std::cout << "The command is" << std::endl;
-  std::cout << cmd << std::endl;
+  std::cout << cmd << std::endl;`
   std::cout << "-----------------------------" << std::endl;
 
+}
+#endif
+
+#if defined(USE_VECTOR_TO_JSON_ARRAY)
+void Test_Vector_toJSON_Array()
+{
+  std::vector<int>vi = {1,2,3,4,5 };
+  std::string ji;
+
+  ji = "[";
+
+  int sz = vi.size();
+  bool first = true;
+  for(int i = 0; i < sz; ++i) {
+    if (!first) {
+      ji.append(",");
+    }
+    first = false;
+    ji.append(std::to_string(vi[i]));
+  }
+  ji.append("]");
+
+  std::cout << ji << std::endl;
+
+}
+#endif
+
+#if defined(USE_POINTER_TO_PARENT)
+
+class Holder;
+
+class Member {
+public:
+  Member(Holder* hpp);
+  ~Member() {};
+  Holder* hp;
+  std::string value;
+};
+
+class Holder {
+public:
+  Holder();
+  ~Holder() {};
+
+  Member mb;
+  std::string value;
+};
+
+Holder::Holder():
+mb(this)
+{
+  value = "I am the holder";
+}
+
+Member::Member(Holder* hpp)
+{
+  hp = hpp;
+  value = "I am a member";
+}
+
+void Test_Pointer_To_Parent()
+{
+  Holder holder;
+
+  std::cout << "Member value: " << holder.mb.value << std::endl;
+  std::cout << "Holder by itself: " << holder.value << std::endl;
+  std::cout << "Holder via member: " << holder.mb.hp->value << std::endl;
 }
 #endif
