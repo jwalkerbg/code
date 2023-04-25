@@ -11,6 +11,7 @@
 #include <string.h>
 #include <limits.h>
 #include <regex>
+#include <random>
 
 #include "singlepulsetimer.h"
 #include "Logger.h"
@@ -39,7 +40,9 @@ using namespace std;
 //#define USE_CATCH_OUTPUT
 //#define USE_TCCMD
 //#define USE_VECTOR_TO_JSON_ARRAY
-#define USE_POINTER_TO_PARENT
+//#define USE_POINTER_TO_PARENT
+#define USE_VECTOR
+//#define USE_RANDOM
 
 #if defined(USE_STATIC_MEMBER_FUNC)
 class CMyClass
@@ -184,6 +187,14 @@ void Test_Vector_toJSON_Array();
 
 #if defined(USE_POINTER_TO_PARENT)
 void Test_Pointer_To_Parent();
+#endif
+
+#if defined(USE_VECTOR)
+void Test_Vector();
+#endif
+
+#if defined(USE_RANDOM)
+void Test_Random();
 #endif
 
 int main()
@@ -338,7 +349,7 @@ int main()
 
     int value = -1;
 
-    const char* pstr = "123456";
+    const char* pstr = "y123456t";
     std::string str;
     str = pstr;
     str[3] = '7';
@@ -587,7 +598,15 @@ int main()
   Test_Pointer_To_Parent();
 #endif
 
-  std::cout << "Stop" << std::endl;
+#if defined(USE_VECTOR)
+  Test_Vector();
+#endif
+
+#if defined(USE_RANDOM)
+  Test_Random();
+#endif
+
+  std::cout << "Stop in main()" << std::endl;
 
   return 0;
 }
@@ -834,11 +853,16 @@ std::time_t local_to_utc(std::time_t local);
 
 void GetLocalAndUTCTime()
 {
+  ::tzset();
   std::time_t utc = std::time(nullptr);
   std::time_t endtime = utc + 300;
+  std::time_t TenHrsBefore = utc - (3600 * 10);
   std::cout << "          endtime: " << endtime << std::endl <<
                "              UTC: " << utc << std::endl <<
-               "             diff: " << std::setw(10) << abs(endtime - utc) << std::endl;
+               "             diff: " << std::setw(10) << abs(endtime - utc) <<  std::endl <<
+               " ten hours before: " << TenHrsBefore <<
+               std::endl;
+
 }
 
 std::time_t local_to_utc(std::time_t local)
@@ -1051,3 +1075,53 @@ void Test_Pointer_To_Parent()
   std::cout << "Holder via member: " << holder.mb.hp->value << std::endl;
 }
 #endif
+
+#if defined(USE_VECTOR)
+
+class VectorMember {
+public:
+  VectorMember() { a = 10; };
+  ~VectorMember() {
+    cout << "VectorMember destructor" << std::endl;
+  };
+  int a;
+};
+
+void Test_Vector()
+{
+  std::vector<int> vi;
+  std::cout << "vi.size = " << vi.size() << std::endl;
+
+  std::vector<VectorMember>vvm;
+  for (int i = 0; i < 5; i++) {
+    vvm.push_back(VectorMember());
+  }
+  std::cout << "now exiting test" << std::endl;
+}
+#endif
+
+#if defined(USE_RANDOM)
+void Test_Random_();
+void Test_Random()
+{
+  Test_Random_();
+  Test_Random_();
+  Test_Random_();
+  Test_Random_();
+}
+
+void Test_Random_()
+{
+  int min = 0;
+  int max = 65535;
+  std::random_device rd;
+  std::mt19937 gen(rd());
+  std::uniform_int_distribution<> dis(min, max);
+  int random_int1 = dis(gen);
+  int random_int2 = dis(gen);
+
+  std::cout << "Random integer between " << min << " and " << max << ": " << random_int1 << std::endl;
+  std::cout << "Random integer between " << min << " and " << max << ": " << random_int2 << std::endl;
+}
+#endif
+
