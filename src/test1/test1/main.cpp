@@ -41,8 +41,9 @@ using namespace std;
 //#define USE_TCCMD
 //#define USE_VECTOR_TO_JSON_ARRAY
 //#define USE_POINTER_TO_PARENT
-#define USE_VECTOR
+//#define USE_VECTOR
 //#define USE_RANDOM
+#define USE_FIND_SUBSTRING
 
 #if defined(USE_STATIC_MEMBER_FUNC)
 class CMyClass
@@ -195,6 +196,10 @@ void Test_Vector();
 
 #if defined(USE_RANDOM)
 void Test_Random();
+#endif
+
+#if defined(USE_FIND_SUBSTRING)
+void Test_FindSubstring();
 #endif
 
 int main()
@@ -604,6 +609,10 @@ int main()
 
 #if defined(USE_RANDOM)
   Test_Random();
+#endif
+
+#if defined(USE_FIND_SUBSTRING)
+  Test_FindSubstring();
 #endif
 
   std::cout << "Stop in main()" << std::endl;
@@ -1125,3 +1134,28 @@ void Test_Random_()
 }
 #endif
 
+#if defined(USE_FIND_SUBSTRING)
+void substrFinder(std::string& container, std::string& substr);
+
+void Test_FindSubstring()
+{
+  std::string container = "This is a container of substrings, alpha, beta, gamma etc.";
+  std::string str1 = "beta";
+  std::string str2 = "delta";
+  substrFinder(container,str1);
+  substrFinder(container,str2);
+}
+
+void substrFinder(std::string& container, std::string& substr)
+{
+  std::size_t found =std::string::npos;
+
+  found = container.find(substr);
+  std::cout << "The string \"" << substr <<  "\" was";
+  if (found == std::string::npos) {
+    std::cout << " not";
+  }
+  std::cout << " found" << std::endl;
+}
+
+#endif
