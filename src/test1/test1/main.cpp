@@ -1,6 +1,8 @@
 #include <algorithm>
 #include <iomanip>
+#include <filesystem>
 #include <iostream>
+#include <fstream>
 #include <iterator>
 #include <ctime>
 #include <chrono>
@@ -43,7 +45,9 @@ using namespace std;
 //#define USE_POINTER_TO_PARENT
 //#define USE_VECTOR
 //#define USE_RANDOM
-#define USE_FIND_SUBSTRING
+//#define USE_FIND_SUBSTRING
+//#define USE_NTP_READ
+#define USE_NTP_WRITE
 
 #if defined(USE_STATIC_MEMBER_FUNC)
 class CMyClass
@@ -200,6 +204,14 @@ void Test_Random();
 
 #if defined(USE_FIND_SUBSTRING)
 void Test_FindSubstring();
+#endif
+
+#if defined(USE_NTP_READ)
+int Test_NtpRead();
+#endif
+
+#if defined(USE_NTP_WRITE)
+int Test_NtpWrite();
 #endif
 
 int main()
@@ -613,6 +625,14 @@ int main()
 
 #if defined(USE_FIND_SUBSTRING)
   Test_FindSubstring();
+#endif
+
+#if defined(USE_NTP_READ)
+  Test_NtpRead();
+#endif
+
+#if defined(USE_NTP_WRITE)
+  Test_NtpWrite();
 #endif
 
   std::cout << "Stop in main()" << std::endl;
@@ -1159,3 +1179,114 @@ void substrFinder(std::string& container, std::string& substr)
 }
 
 #endif
+
+#if defined(USE_NTP_READ)
+int Test_NtpRead()
+{
+  int retCode = 0; // OK
+
+  std::string filename = "../test1/ntp.conf";
+
+  std::filesystem::path currentPath = std::filesystem::current_path();
+  std::cout << "Current directory: " << currentPath << std::endl;
+
+  std::ifstream ifs;
+  ifs.open(filename.c_str(),std::ios::in);
+
+  if (ifs.is_open()) {
+    std::cout << filename << " was opened" << std::endl;
+    std::string serverd = "server";
+    std::string line;
+    while(std::getline(ifs, line)) {
+      // check to see if we have 'server' directive
+      if (line.find(serverd) == 0) {
+          std::cout << std::endl << " >>>>>>> " << line << std::endl;
+          if (std::isspace(line[serverd.size()]) == 0) {
+              std::cout << "server directive not valid" << std::endl;
+              continue;
+          }
+
+          // skip server directive
+          std::string rest = line.substr(serverd.size());
+
+          // skip intermediate whitspaces
+          int pos = rest.find_first_not_of(" \t");
+          if (pos == rest.npos) {
+              retCode = 1;  // BAD
+              break;
+          }
+          rest = rest.substr(pos);
+
+          // find first space after the address
+          pos = rest.find_first_of(" \t");
+          if (pos != rest.npos) {
+              rest = rest.substr(0,pos);
+          }
+          std::cout << "found address: [" << rest << "]" << std::endl;
+      }
+    }
+  }
+  else {
+    std::cout << filename << " was not opened" << std::endl;
+  }
+
+  ifs.close();
+
+  return retCode;
+}
+#endif
+
+#if defined(USE_NTP_WRITE)
+
+std::vector<std::string> names = { "server1", "server2", "server3" };
+int Test_NtpWrite()
+{
+  int retCode = 0; // OK
+
+  std::string ifilename = "../test1/ntp.conf";
+  std::string ofilename = "../test1/ntp.confn";
+
+  std::ifstream ifs;
+  std::ofstream ofs;
+
+  ifs.open(ifilename.c_str(),std::ios::in);
+  ofs.open(ofilename.c_str(),std::ios::out);
+
+  if (ifs.is_open() && ofs.is_open()) {
+    std::size_t srvs = 0;
+    bool notwritten = true;
+    std::string serverd = "server ";
+    std::string line;
+    while(std::getline(ifs, line)) {
+      // check to see if we have 'server' directive
+      if (line.find(serverd) == 0) {
+          srvs++;   // we mark that server directives were found
+      }
+      else {
+          if (notwritten && srvs > 0) {
+              for (std::size_t i = 0; i < names.size(); ++i) {
+                  ofs << "server " << names[i] << " iburst" << std::endl;
+              }
+              notwritten = false;
+          }
+          ofs << line << std::endl;
+      }
+    }
+    if (notwritten && srvs == 0) {
+      for (std::size_t i = 0; i < names.size(); ++i) {
+          ofs << "server " << names[i] << " iburst" << std::endl;
+      }
+    }
+  }
+
+  if (ifs.is_open()) {
+    ifs.close();
+  }
+  if (ofs.is_open()) {
+    ofs.close();
+  }
+
+}
+#endif
+
+
