@@ -1285,7 +1285,7 @@ int Test_NtpWrite()
   if (ofs.is_open()) {
     ofs.close();
   }
-
+  return retCode;
 }
 #endif
 
