@@ -1244,10 +1244,12 @@ int Test_NtpWrite()
   int retCode = 0; // OK
 
   std::string ifilename = "../test1/ntp.conf";
-  std::string ofilename = "../test1/ntp.confn";
+  std::string ofilename = ifilename + 'n';
 
   std::ifstream ifs;
   std::ofstream ofs;
+
+  std::string oldfilename = ifilename + "_old";
 
   ifs.open(ifilename.c_str(),std::ios::in);
   ofs.open(ofilename.c_str(),std::ios::out);
@@ -1265,7 +1267,7 @@ int Test_NtpWrite()
       else {
           if (notwritten && srvs > 0) {
               for (std::size_t i = 0; i < names.size(); ++i) {
-                  ofs << "server " << names[i] << " iburst" << std::endl;
+                  ofs << "server " << names[i] << " iburst minpoll 15 maxpoll 16" << std::endl;
               }
               notwritten = false;
           }
@@ -1286,6 +1288,12 @@ int Test_NtpWrite()
     ofs.close();
   }
 
+  if (0 == retCode) {
+    std::rename(ifilename.c_str(),oldfilename.c_str());
+    std::rename(ofilename.c_str(),ifilename.c_str());
+  }
+
+  return retCode;
 }
 #endif
 
