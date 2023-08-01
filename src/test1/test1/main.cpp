@@ -47,7 +47,9 @@ using namespace std;
 //#define USE_RANDOM
 //#define USE_FIND_SUBSTRING
 //#define USE_NTP_READ
-#define USE_NTP_WRITE
+//#define USE_NTP_WRITE
+//#define USE_ENUM_IN_ARR_INIT
+#define USE_MINUS_ZERO
 
 #if defined(USE_STATIC_MEMBER_FUNC)
 class CMyClass
@@ -212,6 +214,14 @@ int Test_NtpRead();
 
 #if defined(USE_NTP_WRITE)
 int Test_NtpWrite();
+#endif
+
+#if defined(USE_ENUM_IN_ARR_INIT)
+int Test_EnumInArrayInit();
+#endif
+
+#if defined(USE_MINUS_ZERO)
+int Test_Minus_Zero();
 #endif
 
 int main()
@@ -633,6 +643,14 @@ int main()
 
 #if defined(USE_NTP_WRITE)
   Test_NtpWrite();
+#endif
+
+#if defined(USE_ENUM_IN_ARR_INIT)
+  Test_EnumInArrayInit();
+#endif
+
+#if defined(USE_MINUS_ZERO)
+  Test_Minus_Zero();
 #endif
 
   std::cout << "Stop in main()" << std::endl;
@@ -1295,6 +1313,47 @@ int Test_NtpWrite()
 
   return retCode;
 }
+#endif
+
+#if defined(USE_ENUM_IN_ARR_INIT)
+
+enum {
+    IDX_AAA,
+    IDX_BBB,
+    IDX_CCC,
+    IDX_DDD,
+
+    IDX_SIZE
+};
+
+struct data { int a; char b; };
+
+struct data ara[IDX_SIZE] = {
+    [IDX_AAA] = { 101, 'A' },
+    [IDX_DDD] = { 104, 'D' }
+};
+
+int Test_EnumInArrayInit()
+{
+  for (int i = 0; i < IDX_SIZE; i++) {
+    cout << "ara[" << i << "].a = " << ara[i].a << "; ara[" << i << "].b = " << ara[i].b << std::endl;
+  }
+
+  return 0;
+}
+#endif
+
+#if defined(USE_MINUS_ZERO)
+
+int Test_Minus_Zero()
+{
+  cout << " Minus zero = " << -0 << std::endl;
+
+  for (int i = -0; i < 10; i++) {
+    cout << "i = " << i << std::endl;
+  }
+}
+
 #endif
 
 
