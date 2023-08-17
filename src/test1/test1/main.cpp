@@ -47,7 +47,10 @@ using namespace std;
 //#define USE_RANDOM
 //#define USE_FIND_SUBSTRING
 //#define USE_NTP_READ
-#define USE_NTP_WRITE
+//#define USE_NTP_WRITE
+//#define USE_ENUM_IN_ARR_INIT
+//#define USE_MINUS_ZERO
+#define USE_RECURSIVE_MACRO
 
 #if defined(USE_STATIC_MEMBER_FUNC)
 class CMyClass
@@ -212,6 +215,18 @@ int Test_NtpRead();
 
 #if defined(USE_NTP_WRITE)
 int Test_NtpWrite();
+#endif
+
+#if defined(USE_ENUM_IN_ARR_INIT)
+int Test_EnumInArrayInit();
+#endif
+
+#if defined(USE_MINUS_ZERO)
+int Test_Minus_Zero();
+#endif
+
+#if defined(USE_RECURSIVE_MACRO)
+int test_Recursive_Macro();
 #endif
 
 int main()
@@ -633,6 +648,18 @@ int main()
 
 #if defined(USE_NTP_WRITE)
   Test_NtpWrite();
+#endif
+
+#if defined(USE_ENUM_IN_ARR_INIT)
+  Test_EnumInArrayInit();
+#endif
+
+#if defined(USE_MINUS_ZERO)
+  Test_Minus_Zero();
+#endif
+
+#if defined(USE_RECURSIVE_MACRO)
+  test_Recursive_Macro();
 #endif
 
   std::cout << "Stop in main()" << std::endl;
@@ -1244,10 +1271,12 @@ int Test_NtpWrite()
   int retCode = 0; // OK
 
   std::string ifilename = "../test1/ntp.conf";
-  std::string ofilename = "../test1/ntp.confn";
+  std::string ofilename = ifilename + 'n';
 
   std::ifstream ifs;
   std::ofstream ofs;
+
+  std::string oldfilename = ifilename + "_old";
 
   ifs.open(ifilename.c_str(),std::ios::in);
   ofs.open(ofilename.c_str(),std::ios::out);
@@ -1265,7 +1294,7 @@ int Test_NtpWrite()
       else {
           if (notwritten && srvs > 0) {
               for (std::size_t i = 0; i < names.size(); ++i) {
-                  ofs << "server " << names[i] << " iburst" << std::endl;
+                  ofs << "server " << names[i] << " iburst minpoll 15 maxpoll 16" << std::endl;
               }
               notwritten = false;
           }
@@ -1285,8 +1314,74 @@ int Test_NtpWrite()
   if (ofs.is_open()) {
     ofs.close();
   }
+
+  if (0 == retCode) {
+    std::rename(ifilename.c_str(),oldfilename.c_str());
+    std::rename(ofilename.c_str(),ifilename.c_str());
+  }
+
   return retCode;
 }
 #endif
 
+#if defined(USE_ENUM_IN_ARR_INIT)
+
+enum {
+    IDX_AAA,
+    IDX_BBB,
+    IDX_CCC,
+    IDX_DDD,
+
+    IDX_SIZE
+};
+
+struct data { int a; char b; };
+
+struct data ara[IDX_SIZE] = {
+    [IDX_AAA] = { 101, 'A' },
+    [IDX_DDD] = { 104, 'D' }
+};
+
+int Test_EnumInArrayInit()
+{
+  for (int i = 0; i < IDX_SIZE; i++) {
+    cout << "ara[" << i << "].a = " << ara[i].a << "; ara[" << i << "].b = " << ara[i].b << std::endl;
+  }
+
+  return 0;
+}
+#endif
+
+#if defined(USE_MINUS_ZERO)
+
+int Test_Minus_Zero()
+{
+  cout << " Minus zero = " << -0 << std::endl;
+
+  for (int i = -0; i < 10; i++) {
+    cout << "i = " << i << std::endl;
+  }
+}
+
+#endif
+
+#if defined(USE_RECURSIVE_MACRO)
+
+
+#define FACTORIAL(n) \
+    ((n) <= 1 ? 1 : (n) * FACTORIAL((n) - 1))
+
+
+#define FIB(n) ((n <= 1) ? n : FIB(n - 1) + FIB(n - 2))
+
+int test_Recursive_Macro()
+{
+  int facres;
+
+  facres = FIB(5);
+
+  cout << "FIB(5) = " << facres << std::endl;
+}
+
+#endif
 
