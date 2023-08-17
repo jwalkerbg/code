@@ -49,7 +49,8 @@ using namespace std;
 //#define USE_NTP_READ
 //#define USE_NTP_WRITE
 //#define USE_ENUM_IN_ARR_INIT
-#define USE_MINUS_ZERO
+//#define USE_MINUS_ZERO
+#define USE_RECURSIVE_MACRO
 
 #if defined(USE_STATIC_MEMBER_FUNC)
 class CMyClass
@@ -222,6 +223,10 @@ int Test_EnumInArrayInit();
 
 #if defined(USE_MINUS_ZERO)
 int Test_Minus_Zero();
+#endif
+
+#if defined(USE_RECURSIVE_MACRO)
+int test_Recursive_Macro();
 #endif
 
 int main()
@@ -651,6 +656,10 @@ int main()
 
 #if defined(USE_MINUS_ZERO)
   Test_Minus_Zero();
+#endif
+
+#if defined(USE_RECURSIVE_MACRO)
+  test_Recursive_Macro();
 #endif
 
   std::cout << "Stop in main()" << std::endl;
@@ -1356,4 +1365,23 @@ int Test_Minus_Zero()
 
 #endif
 
+#if defined(USE_RECURSIVE_MACRO)
+
+
+#define FACTORIAL(n) \
+    ((n) <= 1 ? 1 : (n) * FACTORIAL((n) - 1))
+
+
+#define FIB(n) ((n <= 1) ? n : FIB(n - 1) + FIB(n - 2))
+
+int test_Recursive_Macro()
+{
+  int facres;
+
+  facres = FIB(5);
+
+  cout << "FIB(5) = " << facres << std::endl;
+}
+
+#endif
 
