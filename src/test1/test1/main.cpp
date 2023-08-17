@@ -50,7 +50,8 @@ using namespace std;
 //#define USE_NTP_WRITE
 //#define USE_ENUM_IN_ARR_INIT
 //#define USE_MINUS_ZERO
-#define USE_RECURSIVE_MACRO
+//#define USE_RECURSIVE_MACRO
+#define USE_CHECKSUM
 
 #if defined(USE_STATIC_MEMBER_FUNC)
 class CMyClass
@@ -227,6 +228,10 @@ int Test_Minus_Zero();
 
 #if defined(USE_RECURSIVE_MACRO)
 int test_Recursive_Macro();
+#endif
+
+#if defined(USE_CHECKSUM)
+int test_Checksum();
 #endif
 
 int main()
@@ -660,6 +665,10 @@ int main()
 
 #if defined(USE_RECURSIVE_MACRO)
   test_Recursive_Macro();
+#endif
+
+#if defined(USE_CHECKSUM)
+  test_Checksum();
 #endif
 
   std::cout << "Stop in main()" << std::endl;
@@ -1385,3 +1394,35 @@ int test_Recursive_Macro()
 
 #endif
 
+#if defined(USE_CHECKSUM)
+
+#define API_MAGICNUMBER (0x4bu)
+
+static bool CheckChecksum(uint8_t* cmd, uint8_t len)
+{
+  uint8_t c;
+
+  c = 0u;
+  for (int i = 0; i < (len - 1); i++) {
+    c ^= cmd[i];
+  }
+  c ^= API_MAGICNUMBER;
+  return (c == cmd[len - 1]);
+}
+
+uint8_t command[] = {
+    0x41, 0x42, 0x01, 0x02, 0x01, 0x86, 0xcc
+};
+
+int test_Checksum()
+{
+  bool res;
+
+  res = CheckChecksum(command,sizeof(command));
+
+  std::cout << "CheckChecksum: " << res << std::endl;
+
+  return 0;
+}
+
+#endif
