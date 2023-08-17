@@ -30,3 +30,5 @@
 *.exe
 *.out
 *.app
+/src/test1/build-test1-Desktop_Qt_6_4_0_MinGW_64_bit-RelWithDebInfo
+/src/test1/build-test1-Replacement_for_Desktop_Qt_6_4_0_MinGW_64_bit-Debug
