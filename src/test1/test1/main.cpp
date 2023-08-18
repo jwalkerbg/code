@@ -1414,6 +1414,19 @@ uint8_t command[] = {
     0x41, 0x42, 0x01, 0x02, 0x01, 0x86, 0xcc
 };
 
+void api_calculate_checksum(uint8_t* buf, uint8_t len)
+{
+  uint8_t c, lenght;
+
+  lenght = len - 1;
+  c = 0u;
+  for (int i = 0; i < lenght; i++) {
+    c ^= buf[i];
+  }
+  c ^= API_MAGICNUMBER;
+  buf[lenght] = c;
+}
+
 int test_Checksum()
 {
   bool res;
@@ -1421,6 +1434,10 @@ int test_Checksum()
   res = CheckChecksum(command,sizeof(command));
 
   std::cout << "CheckChecksum: " << res << std::endl;
+
+  command[sizeof(command)-1] = '\0';
+  api_calculate_checksum(command,sizeof(command));
+  std::cout << "Calculated checksum: " << static_cast<unsigned int>(command[sizeof(command)-1]) << std::endl;
 
   return 0;
 }
