@@ -1398,45 +1398,43 @@ int test_Recursive_Macro()
 
 #define API_MAGICNUMBER (0x4bu)
 
+static uint8_t api_calculate_checksum(uint8_t* buf, uint8_t len);
+
 static bool CheckChecksum(uint8_t* cmd, uint8_t len)
 {
-  uint8_t c;
-
-  c = 0u;
-  for (int i = 0; i < (len - 1); i++) {
-    c ^= cmd[i];
-  }
-  c ^= API_MAGICNUMBER;
-  return (c == cmd[len - 1]);
+  uint8_t c = api_calculate_checksum(cmd,len);
+  return c == cmd[len];
 }
 
 uint8_t command[] = {
     0x41, 0x42, 0x01, 0x02, 0x01, 0x86, 0xcc
 };
 
-void api_calculate_checksum(uint8_t* buf, uint8_t len)
+static uint8_t api_calculate_checksum(uint8_t* buf, uint8_t len)
 {
   uint8_t c, lenght;
 
-  lenght = len - 1;
+  lenght = len;
   c = 0u;
   for (int i = 0; i < lenght; i++) {
     c ^= buf[i];
   }
   c ^= API_MAGICNUMBER;
-  buf[lenght] = c;
+
+  return c;
 }
 
 int test_Checksum()
 {
   bool res;
 
-  res = CheckChecksum(command,sizeof(command));
+  res = CheckChecksum(command,sizeof(command)-1);
 
   std::cout << "CheckChecksum: " << res << std::endl;
 
   command[sizeof(command)-1] = '\0';
-  api_calculate_checksum(command,sizeof(command));
+  uint8_t chk = api_calculate_checksum(command,sizeof(command)-1);
+  command[sizeof(command)-1] = chk;
   std::cout << "Calculated checksum: " << static_cast<unsigned int>(command[sizeof(command)-1]) << std::endl;
 
   return 0;
