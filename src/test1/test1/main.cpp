@@ -1400,7 +1400,7 @@ int test_Recursive_Macro()
 
 static uint8_t api_calculate_checksum(uint8_t* buf, uint8_t len);
 
-static bool CheckChecksum(uint8_t* cmd, uint8_t len)
+static bool api_check_checksum(uint8_t* cmd, uint8_t len)
 {
   uint8_t c = api_calculate_checksum(cmd,len);
   return c == cmd[len];
@@ -1428,9 +1428,9 @@ int test_Checksum()
 {
   bool res;
 
-  res = CheckChecksum(command,sizeof(command)-1);
+  res = api_check_checksum(command,sizeof(command)-1);
 
-  std::cout << "CheckChecksum: " << res << std::endl;
+  std::cout << "api_check_checksum: " << res << std::endl;
 
   command[sizeof(command)-1] = '\0';
   uint8_t chk = api_calculate_checksum(command,sizeof(command)-1);
