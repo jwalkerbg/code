@@ -51,7 +51,8 @@ using namespace std;
 //#define USE_ENUM_IN_ARR_INIT
 //#define USE_MINUS_ZERO
 //#define USE_RECURSIVE_MACRO
-#define USE_CHECKSUM
+//#define USE_CHECKSUM
+#define USE_STRUCT_INIT
 
 #if defined(USE_STATIC_MEMBER_FUNC)
 class CMyClass
@@ -232,6 +233,10 @@ int test_Recursive_Macro();
 
 #if defined(USE_CHECKSUM)
 int test_Checksum();
+#endif
+
+#if defined(USE_STRUCT_INIT)
+int test_struct_init();
 #endif
 
 int main()
@@ -669,6 +674,10 @@ int main()
 
 #if defined(USE_CHECKSUM)
   test_Checksum();
+#endif
+
+#if defined(USE_STRUCT_INIT)
+  test_struct_init();
 #endif
 
   std::cout << "Stop in main()" << std::endl;
@@ -1441,3 +1450,49 @@ int test_Checksum()
 }
 
 #endif
+
+#if defined(USE_STRUCT_INIT)
+
+// This test show how to initialize structs with direct member referencing.
+// It also shows how to initialize structs in structs.
+
+struct ab0 {
+  uint16_t a;
+  uint16_t b;
+};
+
+struct ab1 {
+  uint16_t p;
+  struct ab0 ab;
+  uint16_t q;
+};
+
+struct ab0 ab0_var = {
+    .a = 10,
+    .b = 1012
+};
+
+struct ab1 ab1_var = {
+    .p = 100,
+    .ab = {
+        .a = 101,
+        .b = 102
+    },
+    .q = 103
+};
+
+
+int test_struct_init()
+{
+  std::cout << "ab0_var: " << "ab0_var.a = " << ab0_var.a << ", ab0_var.b = " << ab0_var.b << std::endl;
+
+  std::cout << "ab1_var: " << "ab1_var.p = " << ab1_var.p
+            << ", ab1_var.ab.a = " << ab1_var.ab.a << ", ab1_var.ab.b = " << ab1_var.ab.b
+            << ", ab1_var.q = " << ab1_var.q
+            << std::endl;
+
+  return 0;
+}
+
+#endif
+
