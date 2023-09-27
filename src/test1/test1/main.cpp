@@ -52,7 +52,8 @@ using namespace std;
 //#define USE_MINUS_ZERO
 //#define USE_RECURSIVE_MACRO
 //#define USE_CHECKSUM
-#define USE_STRUCT_INIT
+//#define USE_STRUCT_INIT
+#define USE_HEX_TO_ASC
 
 #if defined(USE_STATIC_MEMBER_FUNC)
 class CMyClass
@@ -237,6 +238,10 @@ int test_Checksum();
 
 #if defined(USE_STRUCT_INIT)
 int test_struct_init();
+#endif
+
+#if defined(USE_HEX_TO_ASC)
+int test_hex_to_asc();
 #endif
 
 int main()
@@ -678,6 +683,10 @@ int main()
 
 #if defined(USE_STRUCT_INIT)
   test_struct_init();
+#endif
+
+#if defined(USE_HEX_TO_ASC)
+  test_hex_to_asc();
 #endif
 
   std::cout << "Stop in main()" << std::endl;
@@ -1494,5 +1503,50 @@ int test_struct_init()
   return 0;
 }
 
+#endif
+
+#if defined(USE_HEX_TO_ASC)
+
+#define MAC_ADDR_LEN (6)
+uint8_t wifi_mac_address[MAC_ADDR_LEN] = { 0 };
+char wifi_mac_address_s[MAC_ADDR_LEN * 2 + 1];
+
+static uint16_t hex_to_asc(uint8_t v)
+{
+  uint8_t t;
+  uint16_t r;
+
+  t = v & 0x0fu;
+  ((uint8_t* )&r)[1] = (t > 9u) ? (t + ('A' - 10u)) : (t + '0');   // LS byte
+  t = v >> 4;
+  ((uint8_t* )&r)[0] = (t > 9u) ? (t + ('A' - 10u)) : (t + '0');   // MS byte
+
+  return r;
+}
+
+char* convert_mac_to_ascii(const uint8_t* mac, char* asc)
+{
+  for (int i = 0; i < 6; i++) {
+    *((uint16_t* )(&(asc[i * 2]))) = hex_to_asc(mac[i]);
+  }
+  asc[6 * 2] = '\0';
+
+  return asc;
+}
+
+int test_hex_to_asc()
+{
+
+  wifi_mac_address[0] = 0xac;
+  wifi_mac_address[1] = 0x31;
+  wifi_mac_address[2] = 0xa5;
+  wifi_mac_address[3] = 0x5a;
+  wifi_mac_address[4] = 0x12;
+  wifi_mac_address[5] = 0xde;
+
+  convert_mac_to_ascii(wifi_mac_address,wifi_mac_address_s);
+
+  return 0;
+}
 #endif
 
