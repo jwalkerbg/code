@@ -53,7 +53,9 @@ using namespace std;
 //#define USE_RECURSIVE_MACRO
 //#define USE_CHECKSUM
 //#define USE_STRUCT_INIT
-#define USE_HEX_TO_ASC
+//#define USE_HEX_TO_ASC
+#define USE_ASC_TO_HEX
+
 
 #if defined(USE_STATIC_MEMBER_FUNC)
 class CMyClass
@@ -242,6 +244,10 @@ int test_struct_init();
 
 #if defined(USE_HEX_TO_ASC)
 int test_hex_to_asc();
+#endif
+
+#if defined(USE_ASC_TO_HEX)
+int test_asc_to_hex();
 #endif
 
 int main()
@@ -688,6 +694,11 @@ int main()
 #if defined(USE_HEX_TO_ASC)
   test_hex_to_asc();
 #endif
+
+#if defined(USE_ASC_TO_HEX)
+  test_asc_to_hex();
+#endif
+
 
   std::cout << "Stop in main()" << std::endl;
 
@@ -1549,4 +1560,78 @@ int test_hex_to_asc()
   return 0;
 }
 #endif
+
+#if defined(USE_ASC_TO_HEX)
+
+int length = 8;
+uint8_t buffer[10];
+
+int asc_to_hex(uint8_t* buffer, const char* s);
+
+int test_asc_to_hex()
+{
+  std::string inp = "ab0102c46g";
+  const char* s = inp.c_str();
+  int ix = asc_to_hex(buffer,s);
+
+  for (int i = 0; i < ix; i++) {
+    std::cout << (int)buffer[i] << " ";
+  }
+  std::cout << std::endl;
+
+  return 0;
+}
+
+// int asc_to_hex(uint8_t* buffer, const char* s, int length)
+// Input:
+//  buffer - the buffer where coverted data will be stored
+//  s - input string containing string with hexdecimal digits
+// Output:
+//  number of converted numbers
+// Description: This function receives a string containing hexadecimal digits. Each two digits
+// form a byte that is written in buffer. If the input string contains a symbol different from a
+// hexadecimal digit it stops conversion. In any case, the function return number of bytes it
+// converted successfully. Note: The function does not check the size of receiving buffer.
+// It is responsibility of caller to assure enough long buffer.
+
+int asc_to_hex(uint8_t* buffer, const char* s)
+{
+  int ix = 0;
+  int length = strlen(s);
+  while (length > 0) {
+
+    uint8_t ch = s[ix * 2];
+    uint8_t d, dl, cl;
+    ch = tolower(ch);
+    if (ch >= '0' && ch <= '9') {
+      d = ch - '0';
+    }
+    else if (ch >= 'a' && ch <= 'f') {
+      d = ch - ('a' - 10);
+    }
+    else {
+      break;
+    }
+    length--;
+    if (length > 0) {
+      cl = s[ix * 2 + 1];
+      if (cl >= '0' && cl <= '9') {
+          dl = cl - '0';
+      }
+      else if (cl >= 'a' && cl <= 'f') {
+          dl = cl - ('a' - 10);
+      }
+      else {
+          break;
+      }
+      d = d * 16 + dl;
+      length--;
+    }
+
+    buffer[ix++] = d;
+  }
+  return ix;
+}
+#endif
+
 
