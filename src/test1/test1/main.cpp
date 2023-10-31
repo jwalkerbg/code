@@ -54,7 +54,9 @@ using namespace std;
 //#define USE_CHECKSUM
 //#define USE_STRUCT_INIT
 //#define USE_HEX_TO_ASC
-#define USE_ASC_TO_HEX
+//#define USE_ASC_TO_HEX
+//#define USE_TWO_STRINGS
+#define USE_POSTSCALLERS
 
 
 #if defined(USE_STATIC_MEMBER_FUNC)
@@ -248,6 +250,14 @@ int test_hex_to_asc();
 
 #if defined(USE_ASC_TO_HEX)
 int test_asc_to_hex();
+#endif
+
+#if defined(USE_TWO_STRINGS)
+int test_two_strings();
+#endif
+
+#if defined(USE_POSTSCALLERS)
+int test_postscallers();
 #endif
 
 int main()
@@ -699,6 +709,13 @@ int main()
   test_asc_to_hex();
 #endif
 
+#if defined(USE_TWO_STRINGS)
+  test_two_strings();
+#endif
+
+#if defined(USE_POSTSCALLERS)
+  test_postscallers();
+#endif
 
   std::cout << "Stop in main()" << std::endl;
 
@@ -1634,4 +1651,56 @@ int asc_to_hex(uint8_t* buffer, const char* s)
 }
 #endif
 
+#if defined(USE_TWO_STRINGS)
 
+#define API_DATA_OFFSET     (5)
+#define WIFI_SSID_LENGTH    (32)
+#define WIFI_PASS_LENGTH    (64)
+
+char datab[128] = "WF\x12\x34\14iv_cenov\x00" "6677890vla\x00\x13";
+int test_two_strings()
+{
+  char ssid[WIFI_SSID_LENGTH];
+  char pass[WIFI_PASS_LENGTH];
+
+  memset(ssid,'\0',sizeof(ssid));
+  strncpy_s(ssid,&datab[API_DATA_OFFSET],WIFI_SSID_LENGTH-1);
+  memset(pass,'\0',sizeof(pass));
+  strncpy_s(pass,&datab[API_DATA_OFFSET+strlen(ssid)+1],WIFI_PASS_LENGTH-1);
+
+  std::cout << ssid << " " << pass << std::endl;
+
+  return 0;
+}
+#endif
+
+#if defined(USE_POSTSCALLERS)
+int test_postscallers()
+{
+  bool enable;
+  int counter = 150;
+  int gas_postscaller = 0;
+  int gas_preheat = 120;
+
+  while (counter != 0) {
+    enable = ((gas_postscaller == 0) || ((gas_preheat != 0) && ((gas_preheat % 10) == 0))) ? true : false;
+
+    if (enable) {
+      std::cout << "Enabled" << std::endl;
+    }
+    else {
+      std::cout << "Disabled" << std::endl;
+    }
+
+    if (++gas_postscaller >= 60) {
+      gas_postscaller = 0;
+    }
+    if (gas_preheat != 0) {
+      gas_preheat--;
+    }
+
+  }
+
+  return 0;
+}
+#endif
