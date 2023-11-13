@@ -56,8 +56,8 @@ using namespace std;
 //#define USE_HEX_TO_ASC
 //#define USE_ASC_TO_HEX
 //#define USE_TWO_STRINGS
-#define USE_POSTSCALLERS
-
+//#define USE_POSTSCALLERN_S
+#define USE_L_N_B
 
 #if defined(USE_STATIC_MEMBER_FUNC)
 class CMyClass
@@ -258,6 +258,10 @@ int test_two_strings();
 
 #if defined(USE_POSTSCALLERS)
 int test_postscallers();
+#endif
+
+#if defined(USE_L_N_B)
+int test_l_n_b();
 #endif
 
 int main()
@@ -715,6 +719,10 @@ int main()
 
 #if defined(USE_POSTSCALLERS)
   test_postscallers();
+#endif
+
+#if defined(USE_L_N_B)
+  test_l_n_b();
 #endif
 
   std::cout << "Stop in main()" << std::endl;
@@ -1704,3 +1712,39 @@ int test_postscallers()
   return 0;
 }
 #endif
+
+#if defined(USE_L_N_B)
+
+union l_n_b {
+  struct {
+    uint8_t b0, b1, b2, b3;
+  } b;
+  struct {
+    int16_t n0, n1;
+  } n;
+  int32_t l;
+};
+typedef union l_n_b L_N_B;
+
+uint8_t bytes[3] = { 0xff, 0xff, 0xff };
+
+int test_l_n_b()
+{
+  L_N_B val;
+
+  val.b.b0 = bytes[2];
+  val.b.b1 = bytes[1];
+  val.b.b2 = bytes[0];
+  if (val.b.b2 & 0x80) {
+    val.b.b3 = 0xffu;
+  }
+  else {
+    val.b.b3 = 0x00u;
+  }
+
+  std::cout << "val.l = " << val.l << std::endl;
+
+  return 0;
+}
+#endif
+
