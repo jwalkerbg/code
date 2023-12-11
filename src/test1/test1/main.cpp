@@ -57,7 +57,8 @@ using namespace std;
 //#define USE_ASC_TO_HEX
 //#define USE_TWO_STRINGS
 //#define USE_POSTSCALLERN_S
-#define USE_L_N_B
+//#define USE_L_N_B
+#define USE_PROPORTIONS
 
 #if defined(USE_STATIC_MEMBER_FUNC)
 class CMyClass
@@ -262,6 +263,10 @@ int test_postscallers();
 
 #if defined(USE_L_N_B)
 int test_l_n_b();
+#endif
+
+#if defined(USE_PROPORTIONS)
+int test_propotions();
 #endif
 
 int main()
@@ -723,6 +728,10 @@ int main()
 
 #if defined(USE_L_N_B)
   test_l_n_b();
+#endif
+
+#if defined(USE_PROPORTIONS)
+  test_propotions();
 #endif
 
   std::cout << "Stop in main()" << std::endl;
@@ -1746,5 +1755,37 @@ int test_l_n_b()
 
   return 0;
 }
+#endif
+
+#if defined(USE_PROPORTIONS)
+
+#define MIN_MAGNET_ANGLE    (10uL)      // degree - correspond to zero speed / zero PWM
+#define MAX_MAGNET_ANGLE    (100uL)     // degree - coorespond to max speed / max PWM
+
+// conversion absolute angles
+#define MIN_MA780_ANGLE     ((uint32_t)((MIN_MAGNET_ANGLE*65536.0)/360.0))
+#define MAX_MA780_ANGLE     ((uint32_t)((MAX_MAGNET_ANGLE*65536.0)/360.0))
+#define MA780_VALUE_TO_MAGNET_ANGLE(x)      (((x)*(MAX_MAGNET_ANGLE-MIN_MAGNET_ANGLE))/(MAX_MA780_ANGLE-MIN_MA780_ANGLE))
+
+// conversion of relative magnet angle (degree)
+#define MA780_VALUE_TO_ANGLE(x)             (MA780_VALUE_TO_MAGNET_ANGLE(x)-MIN_MAGNET_ANGLE)
+
+int test_propotions()
+{
+  uint32_t v1 = 10000;
+  uint32_t v2 = 18300;
+
+  std::cout << "MIN_MA780_ANGLE= " << MIN_MA780_ANGLE << std::endl;
+  std::cout << "MAX_MA780_ANGLE= " << MAX_MA780_ANGLE << std::endl;
+
+  std::cout << "MA780_VALUE_TO_MAGNET_ANGLE= " << MA780_VALUE_TO_MAGNET_ANGLE(v1) << std::endl;
+  std::cout << "MA780_VALUE_TO_MAGNET_ANGLE= " << MA780_VALUE_TO_MAGNET_ANGLE(v2) << std::endl;
+
+  std::cout << "MA780_VALUE_TO_ANGLE= " << MA780_VALUE_TO_ANGLE(v1) << std::endl;
+  std::cout << "MA780_VALUE_TO_ANGLE= " << MA780_VALUE_TO_ANGLE(v2) << std::endl;
+
+  return 0;
+}
+
 #endif
 
