@@ -58,7 +58,9 @@ using namespace std;
 //#define USE_TWO_STRINGS
 //#define USE_POSTSCALLERN_S
 //#define USE_L_N_B
-#define USE_PROPORTIONS
+//#define USE_PROPORTIONS
+//#define USE_TRF_HEADER_CHECKSUM
+#define USE_CALC_SETTING
 
 #if defined(USE_STATIC_MEMBER_FUNC)
 class CMyClass
@@ -267,6 +269,14 @@ int test_l_n_b();
 
 #if defined(USE_PROPORTIONS)
 int test_propotions();
+#endif
+
+#if defined(USE_TRF_HEADER_CHECKSUM)
+int test_trf_header_checksum();
+#endif
+
+#if defined(USE_CALC_SETTING)
+int test_CalculateSetting(void);
 #endif
 
 int main()
@@ -732,6 +742,14 @@ int main()
 
 #if defined(USE_PROPORTIONS)
   test_propotions();
+#endif
+
+#if defined(USE_TRF_HEADER_CHECKSUM)
+  test_trf_header_checksum();
+#endif
+
+#if defined(USE_CALC_SETTING)
+  test_CalculateSetting();
 #endif
 
   std::cout << "Stop in main()" << std::endl;
@@ -1789,3 +1807,125 @@ int test_propotions()
 
 #endif
 
+#if defined(USE_TRF_HEADER_CHECKSUM)
+
+#define TRF_MAGIC_NUMBER (0x56)
+#define TRF_DEVICE_UID_LEN (8u)
+#define FNIRS_PACKET_DATA_MAX_SIZE (5000u)
+
+typedef struct __attribute__((packed))
+{
+  uint8_t packet_type;
+  uint8_t device_type;
+  uint8_t device_uid[TRF_DEVICE_UID_LEN];
+  uint32_t timestamp;
+  uint16_t data_length;
+  uint8_t chk;
+} fnirs_packet_header_t;
+
+typedef struct __attribute__((packed))
+{
+  fnirs_packet_header_t header;
+  uint8_t data[FNIRS_PACKET_DATA_MAX_SIZE];
+} fnirs_packet_t;
+
+fnirs_packet_t packet;
+
+static uint8_t calculate_packet_checksum(fnirs_packet_t *packet)
+{
+  int i;
+  uint8_t c = 0u;
+
+  for (i = 0; i < sizeof(fnirs_packet_header_t) - sizeof(uint8_t); ++i) {
+    c ^= ((uint8_t *)(&(packet->header)))[i];
+  }
+  c ^= TRF_MAGIC_NUMBER;
+  packet->header.chk = c;
+
+  return c;
+}
+
+static bool fnirs_check_packet_header_checksum(fnirs_packet_t *packet)
+{
+  int i;
+  uint8_t c = 0u;
+
+  for (i = 0; i < sizeof(fnirs_packet_header_t) - sizeof(uint8_t); ++i) {
+    c ^= ((uint8_t *)(&(packet->header)))[i];
+  }
+  c ^= TRF_MAGIC_NUMBER;
+
+  return c == packet->header.chk ? true : false;
+}
+int test_trf_header_checksum()
+{
+
+  packet.header.packet_type = 1u;
+  packet.header.device_type = 2u;
+  packet.header.device_uid[0] = '\0';
+  packet.header.timestamp = 1;
+  packet.header.data_length = sizeof(double);
+
+  uint8_t chk = calculate_packet_checksum(&packet);
+
+  std::cout << "calculated checksum c = " << std::hex << (uint16_t)chk << std::endl;
+
+  bool res = fnirs_check_packet_header_checksum(&packet);
+
+  std::cout << "checked checksum : " << std::boolalpha << res << std::endl;
+
+  return 0;
+}
+#endif
+
+#if defined(USE_CALC_SETTING)
+
+#define INP_MININPUT_VALUE  (0)
+#define INP_MAX_INPUT_VALUE (90)
+
+#define OL_START_DUTY_CYCLE     (25)
+#define OL_MINIMAL_DUTY_CYCLE   (0)
+#define OL_MAXIMAL_DUTY_CYCLE   (100)
+
+#define SETTING_PERCENT(v)      ((uint16_t)(((INP_MAX_INPUT_VALUE-INP_MININPUT_VALUE)*(v))/100u))
+
+// INP_MININPUT_VALUE+OL_INPUT_DEVICE_OFFSET <---> OL_MINIMAL_DUTY_CYCLE
+// SETTING_80+ <---> OL_MAXIMAL_DUTY_CYCLE
+#define SETTING_MIN         SETTING_PERCENT(10u)
+#define SETTING_80          SETTING_PERCENT(80u)
+
+static uint16_t ol_Setting_angle;           // measured seeting from MA780
+static uint16_t ol_DC_Setting = 0u;         // duty cycle setting
+static uint16_t ol_DC_MovingSetting = 0u;   // Moving setting that tends to reach ol_DC_Setting
+
+void CalculateSetting(void);
+
+int test_CalculateSetting(void)
+{
+    ol_Setting_angle = SETTING_MIN;
+    CalculateSetting();
+    std::cout << "ol_Setting_angle = " << ol_Setting_angle << ", " << "ol_DC_Setting = " << ol_DC_Setting << std::endl;
+
+    ol_Setting_angle = SETTING_80;
+    CalculateSetting();
+    std::cout << "ol_Setting_angle = " << ol_Setting_angle << ", " << "ol_DC_Setting = " << ol_DC_Setting << std::endl;
+
+    ol_Setting_angle = 79;
+    CalculateSetting();
+    std::cout << "ol_Setting_angle = " << ol_Setting_angle << ", " << "ol_DC_Setting = " << ol_DC_Setting << std::endl;
+    return 0;
+}
+
+void CalculateSetting(void)
+{
+    if (ol_Setting_angle <= SETTING_MIN) {
+        ol_DC_Setting = OL_MINIMAL_DUTY_CYCLE;
+    } else if (ol_Setting_angle >= SETTING_80) {
+        ol_DC_Setting = OL_MAXIMAL_DUTY_CYCLE;
+    } else {
+        ol_DC_Setting = OL_MINIMAL_DUTY_CYCLE;
+        ol_DC_Setting += (int16_t)(((int32_t)(ol_Setting_angle - SETTING_MIN) * (int32_t)(OL_MAXIMAL_DUTY_CYCLE - OL_MINIMAL_DUTY_CYCLE)) / (int32_t)(SETTING_80 - SETTING_MIN));
+    }
+}
+
+#endif
