@@ -60,7 +60,8 @@ using namespace std;
 //#define USE_L_N_B
 //#define USE_PROPORTIONS
 //#define USE_TRF_HEADER_CHECKSUM
-#define USE_CALC_SETTING
+//#define USE_CALC_SETTING
+#define USE_24_32
 
 #if defined(USE_STATIC_MEMBER_FUNC)
 class CMyClass
@@ -277,6 +278,10 @@ int test_trf_header_checksum();
 
 #if defined(USE_CALC_SETTING)
 int test_CalculateSetting(void);
+#endif
+
+#if defined(USE_24_32)
+int test_23_32(void);
 #endif
 
 int main()
@@ -750,6 +755,10 @@ int main()
 
 #if defined(USE_CALC_SETTING)
   test_CalculateSetting();
+#endif
+
+#if defined(USE_24_32)
+  test_23_32();
 #endif
 
   std::cout << "Stop in main()" << std::endl;
@@ -1928,4 +1937,33 @@ void CalculateSetting(void)
     }
 }
 
+#endif
+
+#if defined(USE_24_32)
+
+int test_23_32(void)
+{
+    uint8_t value[3];
+
+    value[0] = 0x11;
+    value[1] = 0x27;
+    value[2] = 0x33;
+
+    uint8_t reg_data[3];
+
+    reg_data[0] = value[2];
+    reg_data[1] = value[1];
+    reg_data[2] = value[0];
+
+    uint32_t power;
+
+    ((uint8_t* )&power)[0] = reg_data[0];
+    ((uint8_t* )&power)[1] = reg_data[1];
+    ((uint8_t* )&power)[2] = reg_data[2];
+    ((uint8_t* )&power)[3] = 0;  // this is MSByte, which has to be zero - positive uint32_t
+
+    std::cout << "Power = " << std::hex << power << std::endl;
+
+    return 0;
+}
 #endif
