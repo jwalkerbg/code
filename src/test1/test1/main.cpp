@@ -1924,7 +1924,7 @@ void CalculateSetting(void)
         ol_DC_Setting = OL_MAXIMAL_DUTY_CYCLE;
     } else {
         ol_DC_Setting = OL_MINIMAL_DUTY_CYCLE;
-        ol_DC_Setting += (int16_t)(((int32_t)(ol_Setting_angle - SETTING_MIN) * (int32_t)(OL_MAXIMAL_DUTY_CYCLE - OL_MINIMAL_DUTY_CYCLE)) / (int32_t)(SETTING_80 - SETTING_MIN));
+        ol_DC_Setting += (uint16_t)(((uint32_t)(ol_Setting_angle - SETTING_MIN) * (int32_t)(OL_MAXIMAL_DUTY_CYCLE - OL_MINIMAL_DUTY_CYCLE)) / (int32_t)(SETTING_80 - SETTING_MIN));
     }
 }
 
