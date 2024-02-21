@@ -61,7 +61,8 @@ using namespace std;
 //#define USE_PROPORTIONS
 //#define USE_TRF_HEADER_CHECKSUM
 //#define USE_CALC_SETTING
-#define USE_24_32
+//#define USE_24_32
+#define USE_HEX_DUMP
 
 #if defined(USE_STATIC_MEMBER_FUNC)
 class CMyClass
@@ -282,6 +283,10 @@ int test_CalculateSetting(void);
 
 #if defined(USE_24_32)
 int test_23_32(void);
+#endif
+
+#if defined(USE_HEX_DUMP)
+int test_hexdump(void);
 #endif
 
 int main()
@@ -759,6 +764,10 @@ int main()
 
 #if defined(USE_24_32)
   test_23_32();
+#endif
+
+#if defined(USE_HEX_DUMP)
+  test_hexdump();
 #endif
 
   std::cout << "Stop in main()" << std::endl;
@@ -1967,3 +1976,51 @@ int test_23_32(void)
     return 0;
 }
 #endif
+
+#if defined(USE_HEX_DUMP)
+
+char test_string[] = "This is a test string. It will be dumped on stdout. А това е на български език.";
+
+#define HEXD_BYTE       (0x01u)
+#define HEXD_WORD       (0x02u)
+#define HEXD_QWORD      (0x03u)
+#define HEXD_LSBFIRST   (0x00u)
+#define HEXD_MSBFIRST   (0x80u)
+
+void DumpHex(const void* data, size_t size) {
+    char ascii[17];
+    size_t i, j;
+    ascii[16] = '\0';
+    for (i = 0; i < size; ++i) {
+        printf("%02X ", ((unsigned char*)data)[i]);
+        if (((unsigned char*)data)[i] >= ' ' && ((unsigned char*)data)[i] <= 255) { // '~'
+            ascii[i % 16] = ((unsigned char*)data)[i];
+        } else {
+            ascii[i % 16] = '.';
+        }
+        if ((i+1) % 8 == 0 || i+1 == size) {
+            printf(" ");
+            if ((i+1) % 16 == 0) {
+                printf("|  %s \n", ascii);
+            } else if (i+1 == size) {
+                ascii[(i+1) % 16] = '\0';
+                if ((i+1) % 16 <= 8) {
+                    printf(" ");
+                }
+                for (j = (i+1) % 16; j < 16; ++j) {
+                    printf("   ");
+                }
+                printf("|  %s \n", ascii);
+            }
+        }
+    }
+}
+
+int test_hexdump(void)
+{
+    DumpHex(test_string,sizeof(test_string));
+
+    return 0;
+}
+#endif
+
