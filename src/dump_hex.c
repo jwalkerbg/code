@@ -1,11 +1,5 @@
 char test_string[] = "This is a test string. It will be dumped on stdout.";
 
-#define HEXD_BYTE       (0x01u)
-#define HEXD_WORD       (0x02u)
-#define HEXD_QWORD      (0x03u)
-#define HEXD_LSBFIRST   (0x00u)
-#define HEXD_MSBFIRST   (0x80u)
-
 #define HEXD_BUFLEN     (256)
 
 static uint16_t hex_to_asc(uint8_t v)
