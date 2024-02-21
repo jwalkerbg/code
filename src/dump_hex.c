@@ -1,6 +1,7 @@
 char test_string[] = "This is a test string. It will be dumped on stdout.";
 
-#define HEXD_BUFLEN     (256)
+#define HEXD_BUFLEN          (256)
+#define HEXD_NONPRINTABLE    ('.')
 
 static uint16_t hex_to_asc(uint8_t v)
 {
@@ -47,7 +48,7 @@ void dump_hex(const void* data, size_t size, output_line func) {
         if (((unsigned char*)data)[i] >= ' ' && ((unsigned char*)data)[i] <= 255) { // '~'
             ascii[i % 16] = ((unsigned char*)data)[i];
         } else {
-            ascii[i % 16] = '.';
+            ascii[i % 16] = HEXD_NONPRINTABLE;
         }
         if ((i+1) % 8 == 0 || i+1 == size) {
             strBuffer[sx++] = ' ';
