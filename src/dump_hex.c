@@ -20,9 +20,13 @@ static void append_ascii(char* buf, const char* tail)
 {
     strcat(buf,"|  ");
     strcat(buf,tail);
-    strcat(buf," \n");
+    strcat(buf," \n");    // if using LOG system, this '\n' is not needed
 }
 
+// example print function. Can be changed with something else if needed:
+// Examples:
+// LOG_INF("%s",printf_line);    // Zephyr: may need to remove final'\n' in append_ascii()
+// ESP_LOGI(TAG,"%s",printf_line);  // ESP-IDF: may need to remove final'\n' in append_ascii()
 static void printf_line(const char* line)
 {
     printf("%s",line);
@@ -33,7 +37,7 @@ typedef void (*output_line)(const char* line);
 // this buffer is big enough to contain full line of 16 number and their ASCII representation
 static char strBuffer[HEXD_BUFLEN];
 
-void dump_hex(const void* data, size_t size, output_line func) {
+void dump_hex_ascii(const void* data, size_t size, output_line func) {
     char ascii[17];
     size_t i, j, sx;
     ascii[16] = '\0';
