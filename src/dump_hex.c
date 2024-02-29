@@ -1,12 +1,7 @@
 char test_string[] = "This is a test string. It will be dumped on stdout.";
 
-#define HEXD_BYTE       (0x01u)
-#define HEXD_WORD       (0x02u)
-#define HEXD_QWORD      (0x03u)
-#define HEXD_LSBFIRST   (0x00u)
-#define HEXD_MSBFIRST   (0x80u)
-
-#define HEXD_BUFLEN     (256)
+#define HEXD_BUFLEN          (256)
+#define HEXD_NONPRINTABLE    ('.')
 
 static uint16_t hex_to_asc(uint8_t v)
 {
@@ -25,9 +20,13 @@ static void append_ascii(char* buf, const char* tail)
 {
     strcat(buf,"|  ");
     strcat(buf,tail);
-    strcat(buf," \n");
+    strcat(buf," \n");    // if using LOG system, this '\n' is not needed
 }
 
+// example print function. Can be changed with something else if needed:
+// Examples:
+// LOG_INF("%s",printf_line);    // Zephyr: may need to remove final'\n' in append_ascii()
+// ESP_LOGI(TAG,"%s",printf_line);  // ESP-IDF: may need to remove final'\n' in append_ascii()
 static void printf_line(const char* line)
 {
     printf("%s",line);
@@ -38,7 +37,7 @@ typedef void (*output_line)(const char* line);
 // this buffer is big enough to contain full line of 16 number and their ASCII representation
 static char strBuffer[HEXD_BUFLEN];
 
-void dump_hex(const void* data, size_t size, output_line func) {
+void dump_hex_ascii(const void* data, size_t size, output_line func) {
     char ascii[17];
     size_t i, j, sx;
     ascii[16] = '\0';
@@ -53,7 +52,7 @@ void dump_hex(const void* data, size_t size, output_line func) {
         if (((unsigned char*)data)[i] >= ' ' && ((unsigned char*)data)[i] <= 255) { // '~'
             ascii[i % 16] = ((unsigned char*)data)[i];
         } else {
-            ascii[i % 16] = '.';
+            ascii[i % 16] = HEXD_NONPRINTABLE;
         }
         if ((i+1) % 8 == 0 || i+1 == size) {
             strBuffer[sx++] = ' ';
