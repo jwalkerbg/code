@@ -62,7 +62,8 @@ using namespace std;
 //#define USE_TRF_HEADER_CHECKSUM
 //#define USE_CALC_SETTING
 //#define USE_24_32
-#define USE_HEX_DUMP
+//#define USE_HEX_DUMP
+#define USE_DUTY_CYCLE_CALC
 
 #if defined(USE_STATIC_MEMBER_FUNC)
 class CMyClass
@@ -287,6 +288,10 @@ int test_23_32(void);
 
 #if defined(USE_HEX_DUMP)
 int test_hexdump(void);
+#endif
+
+#if defined(USE_DUTY_CYCLE_CALC)
+int test_duty_cycle_calc(void);
 #endif
 
 int main()
@@ -768,6 +773,10 @@ int main()
 
 #if defined(USE_HEX_DUMP)
   test_hexdump();
+#endif
+
+#if defined(USE_DUTY_CYCLE_CALC)
+  test_duty_cycle_calc();
 #endif
 
   std::cout << "Stop in main()" << std::endl;
@@ -2064,7 +2073,40 @@ int test_hexdump(void)
 {
     dump_hex(test_string,sizeof(test_string),printf_line);
 
+    struct tera {
+        int a;
+        double b;
+        unsigned int c;
+    };
+    struct tera * ptr;
+
+    std::cout << "sizeof(struct tera) = " << sizeof(struct tera) << " sizeof(ptr) = " << sizeof(ptr) << " sizeof(*ptr) = " << sizeof(*ptr) << std::endl;
+
     return 0;
 }
 #endif
 
+#if defined(USE_DUTY_CYCLE_CALC)
+
+#define OL_START_DUTY_CYCLE     (10)
+#define OL_MINIMAL_DUTY_CYCLE   (10)
+#define OL_MAXIMAL_DUTY_CYCLE   (100)
+
+#define OL_PERCENT_TO_DC(x)     (((x) * 64000uL) / 100u)
+
+uint32_t ol_DC_movingsetting;
+const uint32_t pwm_period = 64000;
+
+int test_duty_cycle_calc(void)
+{
+    ol_DC_movingsetting = OL_PERCENT_TO_DC(OL_MINIMAL_DUTY_CYCLE);
+    std::cout << "ol_DC_movingsetting(OL_MINIMAL_DUTY_CYCLE) = " << ol_DC_movingsetting << std::endl;
+    ol_DC_movingsetting = OL_PERCENT_TO_DC(OL_MAXIMAL_DUTY_CYCLE);
+    std::cout << "ol_DC_movingsetting(OL_MAXIMAL_DUTY_CYCLE) = " << ol_DC_movingsetting << std::endl;
+
+    ol_DC_movingsetting = OL_PERCENT_TO_DC(30);
+    std::cout << "ol_DC_movingsetting(30) = " << ol_DC_movingsetting << std::endl;
+
+    return 0;
+}
+#endif
