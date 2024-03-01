@@ -63,7 +63,8 @@ using namespace std;
 //#define USE_CALC_SETTING
 //#define USE_24_32
 //#define USE_HEX_DUMP
-#define USE_DUTY_CYCLE_CALC
+//#define USE_DUTY_CYCLE_CALC
+#define USE_PERCENT_CALC
 
 #if defined(USE_STATIC_MEMBER_FUNC)
 class CMyClass
@@ -292,6 +293,10 @@ int test_hexdump(void);
 
 #if defined(USE_DUTY_CYCLE_CALC)
 int test_duty_cycle_calc(void);
+#endif
+
+#if defined(USE_PERCENT_CALC)
+int test_percent_calc(void);
 #endif
 
 int main()
@@ -779,8 +784,13 @@ int main()
   test_duty_cycle_calc();
 #endif
 
-  std::cout << "Stop in main()" << std::endl;
+#if defined(USE_PERCENT_CALC)
+  test_percent_calc();
+#endif
 
+
+  std::cout << "Stop in main()" << std::endl;
+  this_thread::sleep_for(std::chrono::milliseconds(300));
   return 0;
 }
 
@@ -2106,6 +2116,64 @@ int test_duty_cycle_calc(void)
 
     ol_DC_movingsetting = OL_PERCENT_TO_DC(30);
     std::cout << "ol_DC_movingsetting(30) = " << ol_DC_movingsetting << std::endl;
+
+    return 0;
+}
+#endif
+
+#if defined(USE_PERCENT_CALC)
+
+#define CONFIG_INP_MAX_INPUT_VALUE_POTENTIOMETER    (4095)
+#define CONFIG_INP_CONTACT_VALUE_PERCENT            (5)
+#define CONFIG_INP_MININPUT_VALUE_PERCENT           (10)
+#define CONFIG_OUTPUT_MIN_PERCENT                   (10)
+#define CONFIG_OUTPUT_MAX_PERCENT                   (100)
+
+#define INPUT_VALUE_TO_PERCENT(x)   (((x)*100uL)/CONFIG_INP_MAX_INPUT_VALUE_POTENTIOMETER))
+#define PERCENT_TO_ADC_VALUE(x)     (((x)*CONFIG_INP_MAX_INPUT_VALUE_POTENTIOMETER)/100uL)
+#define INPUT_SETTING_CONTACT       PERCENT_TO_ADC_VALUE(CONFIG_INP_CONTACT_VALUE_PERCENT)
+#define INPUT_SETTING_MIN           PERCENT_TO_ADC_VALUE(CONFIG_INP_MININPUT_VALUE_PERCENT)
+#define INPUT_SETTING_80            PERCENT_TO_ADC_VALUE(80u)
+
+uint16_t ol_setting_value;
+uint16_t ol_setting_percent;
+
+uint16_t ol_calculate_setting(void)
+{
+    if (ol_setting_value <= INPUT_SETTING_MIN) {
+        ol_setting_percent = 0;
+    }
+    else if (ol_setting_value >= INPUT_SETTING_80) {
+        ol_setting_percent = CONFIG_OUTPUT_MAX_PERCENT;
+    }
+    else {
+        ol_setting_percent = CONFIG_OUTPUT_MIN_PERCENT;
+        ol_setting_percent += ((ol_setting_value-INPUT_SETTING_MIN)*(CONFIG_OUTPUT_MAX_PERCENT-CONFIG_OUTPUT_MIN_PERCENT))/(INPUT_SETTING_80-INPUT_SETTING_MIN);
+    }
+
+    return ol_setting_percent;
+}
+
+
+int test_percent_calc(void)
+{
+    uint16_t value;
+
+    ol_setting_value = INPUT_SETTING_MIN - 1;
+    value = ol_calculate_setting();
+    std::cout << "Below Min: " << "ol_setting_value: " "ol_setting_value: " << ol_setting_value << " ol_setting_percent: " << value << std::endl;
+
+    ol_setting_value = 410;
+    value = ol_calculate_setting();
+    std::cout << "A bit above Min: " << "ol_setting_value: " << ol_setting_value << " ol_setting_percent: " << value << std::endl;
+
+    ol_setting_value = 1843;
+    value = ol_calculate_setting();
+    std::cout << "At the middle: " << "ol_setting_value: " << ol_setting_value << " ol_setting_percent: " << value << std::endl;
+
+    ol_setting_value = 4000;
+    value = ol_calculate_setting();
+    std::cout << "Above 80% : " << "ol_setting_value: " << ol_setting_value << " ol_setting_percent: " << value << std::endl;
 
     return 0;
 }
