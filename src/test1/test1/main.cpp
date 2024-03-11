@@ -65,7 +65,8 @@ using namespace std;
 //#define USE_HEX_DUMP
 //#define USE_DUTY_CYCLE_CALC
 //#define USE_PERCENT_CALC
-#define USE_POW
+//#define USE_POW
+#define USE_RING_BUFFER
 
 #if defined(USE_STATIC_MEMBER_FUNC)
 class CMyClass
@@ -303,6 +304,10 @@ int test_percent_calc(void);
 #if defined(USE_POW)
 int test_pow(void);
 #endif  // defined(USE_POW)
+
+#if defined(USE_RING_BUFFER)
+int test_ring_buffer(void);
+#endif  // defined(USE_RING_BUFFER)
 
 int main()
 {
@@ -796,6 +801,10 @@ int main()
 #if defined(USE_POW)
   test_pow();
 #endif  // defined(USE_POW)
+
+#if defined(USE_RING_BUFFER)
+  test_ring_buffer();
+#endif  // defined(USE_RING_BUFFER)
 
   std::cout << "Stop in main()" << std::endl;
   this_thread::sleep_for(std::chrono::milliseconds(300));
@@ -2219,4 +2228,134 @@ int test_pow(void)
     std::cout << base << " ^ " << power << " = " << dv0 << std::endl;
 }
 #endif  // defined(USE_POW)
+
+#if defined(USE_RING_BUFFER)
+
+typedef struct {
+    void *buffer;
+    int head;       // Index of the first element
+    int tail;       // Index one past the last element
+    int size;       // Maximum number of elements in the buffer
+    int count;      // Current number of elements in the buffer
+    size_t dataSize; // Size of each data element
+    std::mutex mtx; // Mutex for mutual exclusion
+} ring_buffer_t;
+
+// Function to initialize the circular buffer
+ring_buffer_t *rb_init_circular_buffer(int size, size_t dataSize) {
+    ring_buffer_t *cb = new ring_buffer_t;
+    cb->buffer = malloc(size * dataSize);
+    if (cb->buffer == nullptr) {
+        delete cb; // Clean up
+        return nullptr; // Memory allocation failed
+    }
+    cb->size = size;
+    cb->head = 0;
+    cb->tail = 0;
+    cb->count = 0;
+    cb->dataSize = dataSize;
+    return cb;
+}
+
+// Function to add an element to the circular buffer
+int rb_enqueue(ring_buffer_t *cb, void *data) {
+    std::lock_guard<std::mutex> lock(cb->mtx); // Lock the mutex
+    if (cb->count == cb->size) {
+        return -1; // Buffer full
+    }
+    memcpy(static_cast<char *>(cb->buffer) + cb->tail * cb->dataSize, data, cb->dataSize); // Copy data to the circular buffer
+    cb->tail = (cb->tail + cb->dataSize) % (cb->size * cb->dataSize); // Update tail index with wrap-around
+    cb->count++;
+    return 0; // Success
+}
+
+// Function to remove an element from the circular buffer
+int rb_dequeue(ring_buffer_t *cb, void *data) {
+    std::lock_guard<std::mutex> lock(cb->mtx); // Lock the mutex
+    if (cb->count == 0) {
+        return -1; // Buffer empty
+    }
+    memcpy(data, static_cast<char *>(cb->buffer) + cb->head * cb->dataSize, cb->dataSize); // Copy data from the circular buffer
+    cb->head = (cb->head + cb->dataSize) % (cb->size * cb->dataSize); // Update head index with wrap-around
+    cb->count--;
+    return 0; // Success
+}
+
+// Function to check if the circular buffer is empty
+int rb_is_empty(ring_buffer_t *cb) {
+    return (cb->count == 0);
+}
+
+// Function to check if the circular buffer is full
+int rb_is_full(ring_buffer_t *cb) {
+    return (cb->count == cb->size);
+}
+
+// Function to free memory allocated for the circular buffer
+void rb_free_ring_buffer(ring_buffer_t *cb) {
+    free(cb->buffer);
+    delete cb;
+}
+
+int test_ring_buffer(void)
+{
+    // Example usage with int data type
+    ring_buffer_t *cb_int = rb_init_circular_buffer(5, sizeof(int));
+    if (cb_int == NULL) {
+        std::cout << "Failed to initialize circular buffer for int" << std::endl;
+        return 1;
+    }
+
+    // Enqueue some int elements
+    int int_data1 = 10;
+    int int_data2 = 20;
+    rb_enqueue(cb_int, &int_data1);
+    rb_enqueue(cb_int, &int_data2);
+
+    // Dequeue and print int elements
+    while (!rb_is_empty(cb_int)) {
+        int data;
+        if (rb_dequeue(cb_int, &data) == 0) {
+            std::cout << "Dequeued int data: " << data << std::endl;
+        } else {
+            std:: cout << "Failed to dequeue int element" << std::endl;
+        }
+    }
+
+    rb_free_ring_buffer(cb_int); // Clean up
+
+    // Example usage with point3d_t data type
+    typedef struct {
+        int16_t x;
+        int16_t y;
+        int16_t z;
+    } point3d_t;
+
+    ring_buffer_t *cb_point3d = rb_init_circular_buffer(3, sizeof(point3d_t));
+    if (cb_point3d == NULL) {
+        std::cout << "Failed to initialize circular buffer for point3d_t" << std::endl;
+        return 1;
+    }
+
+    // Enqueue some point3d_t elements
+    point3d_t point_data1 = {10, 20, 30};
+    point3d_t point_data2 = {40, 50, 60};
+    rb_enqueue(cb_point3d, &point_data1);
+    rb_enqueue(cb_point3d, &point_data2);
+
+    // Dequeue and print point3d_t elements
+    while (!rb_is_empty(cb_point3d)) {
+        point3d_t data;
+        if (rb_dequeue(cb_point3d, &data) == 0) {
+            std::cout << "Dequeued point3d_t data: x=" << data.x << " y=" << data.y << " z=" << data.z << std::endl;
+        } else {
+            std::cout << "Failed to dequeue point3d_t element" << std::endl;
+        }
+    }
+
+    rb_free_ring_buffer(cb_point3d); // Clean up
+
+    return 0;
+}
+#endif  // defined(USE_RING_BUFFER)
 
