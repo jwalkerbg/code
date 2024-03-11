@@ -64,7 +64,8 @@ using namespace std;
 //#define USE_24_32
 //#define USE_HEX_DUMP
 //#define USE_DUTY_CYCLE_CALC
-#define USE_PERCENT_CALC
+//#define USE_PERCENT_CALC
+#define USE_POW
 
 #if defined(USE_STATIC_MEMBER_FUNC)
 class CMyClass
@@ -298,6 +299,10 @@ int test_duty_cycle_calc(void);
 #if defined(USE_PERCENT_CALC)
 int test_percent_calc(void);
 #endif
+
+#if defined(USE_POW)
+int test_pow(void);
+#endif  // defined(USE_POW)
 
 int main()
 {
@@ -788,6 +793,9 @@ int main()
   test_percent_calc();
 #endif
 
+#if defined(USE_POW)
+  test_pow();
+#endif  // defined(USE_POW)
 
   std::cout << "Stop in main()" << std::endl;
   this_thread::sleep_for(std::chrono::milliseconds(300));
@@ -2178,3 +2186,37 @@ int test_percent_calc(void)
     return 0;
 }
 #endif
+
+#if defined(USE_POW)
+
+static double pows(double x, double y)
+{
+    double result = 1;
+
+    if (y < 0) {
+        y = -y;
+        while (y-- > 0.0) {
+            result /= x;
+        }
+    } else {
+        while (y-- > 0.0) {
+            result *= x;
+        }
+    }
+
+    return result;
+}
+
+
+
+int test_pow(void)
+{
+    double dv0;
+    double base = 2.5;
+    double power = 3.5;
+
+    dv0 = pows(base,power);
+    std::cout << base << " ^ " << power << " = " << dv0 << std::endl;
+}
+#endif  // defined(USE_POW)
+
