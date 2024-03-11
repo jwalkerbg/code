@@ -2231,8 +2231,15 @@ int test_pow(void)
 
 #if defined(USE_RING_BUFFER)
 
+// Example usage with point3d_t data type
 typedef struct {
-    void *buffer;
+    int16_t x;
+    int16_t y;
+    int16_t z;
+} point3d_t;
+
+typedef struct {
+    uint8_t *buffer;
     int head;       // Index of the first element
     int tail;       // Index one past the last element
     int size;       // Maximum number of elements in the buffer
@@ -2244,7 +2251,7 @@ typedef struct {
 // Function to initialize the circular buffer
 ring_buffer_t *rb_init_circular_buffer(int size, size_t dataSize) {
     ring_buffer_t *cb = new ring_buffer_t;
-    cb->buffer = malloc(size * dataSize);
+    cb->buffer = (uint8_t *)malloc(size * dataSize);
     if (cb->buffer == nullptr) {
         delete cb; // Clean up
         return nullptr; // Memory allocation failed
@@ -2258,43 +2265,84 @@ ring_buffer_t *rb_init_circular_buffer(int size, size_t dataSize) {
 }
 
 // Function to add an element to the circular buffer
-int rb_enqueue(ring_buffer_t *cb, void *data) {
+bool rb_enqueue(ring_buffer_t *cb, void *data) {
     std::lock_guard<std::mutex> lock(cb->mtx); // Lock the mutex
     if (cb->count == cb->size) {
-        return -1; // Buffer full
+        return false;   // Buffer full
     }
-    memcpy(static_cast<char *>(cb->buffer) + cb->tail * cb->dataSize, data, cb->dataSize); // Copy data to the circular buffer
+    memcpy(cb->buffer + cb->tail, data, cb->dataSize); // Copy data to the circular buffer
     cb->tail = (cb->tail + cb->dataSize) % (cb->size * cb->dataSize); // Update tail index with wrap-around
     cb->count++;
-    return 0; // Success
+    return true;    // Success
 }
 
 // Function to remove an element from the circular buffer
-int rb_dequeue(ring_buffer_t *cb, void *data) {
+bool rb_dequeue(ring_buffer_t *cb, void *data) {
     std::lock_guard<std::mutex> lock(cb->mtx); // Lock the mutex
     if (cb->count == 0) {
-        return -1; // Buffer empty
+        return false;   // Buffer empty
     }
-    memcpy(data, static_cast<char *>(cb->buffer) + cb->head * cb->dataSize, cb->dataSize); // Copy data from the circular buffer
+    memcpy(data, cb->buffer + cb->head, cb->dataSize); // Copy data from the circular buffer
     cb->head = (cb->head + cb->dataSize) % (cb->size * cb->dataSize); // Update head index with wrap-around
     cb->count--;
-    return 0; // Success
+    return true;    // Success
+}
+
+// Function to remove multiple elements from the circular buffer
+bool rb_dequeue_multiple(ring_buffer_t *cb, void *data, int numItems, int* dequeued)
+{
+    std::lock_guard<std::mutex> lock(cb->mtx); // Lock the mutex
+    if (cb->count == 0) {
+        if (dequeued) *dequeued = 0;
+        return false;   // Buffer empty, no items dequeued
+    }
+
+    // Calculate the number of items to dequeue
+    int itemsToDequeue = (cb->count < numItems) ? cb->count : numItems;
+
+    // Dequeue the items
+    if (cb->head < cb->tail || cb->size == 1) {
+        // No wraparound or single element buffer
+        memcpy(data, cb->buffer + cb->head, itemsToDequeue * cb->dataSize);
+    } else {
+        // Wraparound
+        int elementsToEnd = cb->size - cb->head / cb->dataSize;
+        if (itemsToDequeue <= elementsToEnd) {
+            // Dequeue within the same section
+            memcpy(data, cb->buffer + cb->head, itemsToDequeue * cb->dataSize);
+        } else {
+            // Dequeue wraps around the buffer
+            memcpy(data, cb->buffer + cb->head, elementsToEnd * cb->dataSize);
+            memcpy((uint8_t*)data + (elementsToEnd * cb->dataSize), cb->buffer, (itemsToDequeue - elementsToEnd) * cb->dataSize);
+        }
+    }
+
+    // Update head index with wrap-around
+    cb->head = (cb->head + itemsToDequeue * cb->dataSize) % (cb->size * cb->dataSize);
+    cb->count -= itemsToDequeue;
+
+    if (dequeued) *dequeued = itemsToDequeue;
+    return true;
 }
 
 // Function to check if the circular buffer is empty
-int rb_is_empty(ring_buffer_t *cb) {
+bool rb_is_empty(ring_buffer_t *cb) {
     return (cb->count == 0);
 }
 
 // Function to check if the circular buffer is full
-int rb_is_full(ring_buffer_t *cb) {
+bool rb_is_full(ring_buffer_t *cb) {
     return (cb->count == cb->size);
 }
 
 // Function to free memory allocated for the circular buffer
 void rb_free_ring_buffer(ring_buffer_t *cb) {
-    free(cb->buffer);
-    delete cb;
+    if (cb != NULL) {
+        if (cb->buffer != NULL) {
+            free(cb->buffer);
+        }
+        delete cb;
+    }
 }
 
 int test_ring_buffer(void)
@@ -2315,7 +2363,7 @@ int test_ring_buffer(void)
     // Dequeue and print int elements
     while (!rb_is_empty(cb_int)) {
         int data;
-        if (rb_dequeue(cb_int, &data) == 0) {
+        if (rb_dequeue(cb_int, &data)) {
             std::cout << "Dequeued int data: " << data << std::endl;
         } else {
             std:: cout << "Failed to dequeue int element" << std::endl;
@@ -2324,24 +2372,42 @@ int test_ring_buffer(void)
 
     rb_free_ring_buffer(cb_int); // Clean up
 
-    // Example usage with point3d_t data type
-    typedef struct {
-        int16_t x;
-        int16_t y;
-        int16_t z;
-    } point3d_t;
-
-    ring_buffer_t *cb_point3d = rb_init_circular_buffer(3, sizeof(point3d_t));
+    ring_buffer_t *cb_point3d = rb_init_circular_buffer(4, sizeof(point3d_t));
     if (cb_point3d == NULL) {
         std::cout << "Failed to initialize circular buffer for point3d_t" << std::endl;
         return 1;
     }
 
     // Enqueue some point3d_t elements
-    point3d_t point_data1 = {10, 20, 30};
-    point3d_t point_data2 = {40, 50, 60};
+    point3d_t point_data1 = {10, 10, 10};
+    point3d_t point_data2 = {20, 20, 20};
+    point3d_t point_data3 = {30, 30, 30};
+    point3d_t point_data4 = {40, 40, 40};
+    point3d_t point_data5 = {50, 50, 50};
     rb_enqueue(cb_point3d, &point_data1);
     rb_enqueue(cb_point3d, &point_data2);
+    rb_enqueue(cb_point3d, &point_data3);
+    rb_enqueue(cb_point3d, &point_data4);
+
+    point3d_t data1;
+    if (rb_dequeue(cb_point3d, &data1)) {
+        std::cout << "Dequeued point3d_t data: x=" << data1.x << " y=" << data1.y << " z=" << data1.z << std::endl;
+    } else {
+        std::cout << "Failed to dequeue point3d_t element" << std::endl;
+    }
+
+    if (rb_enqueue(cb_point3d, &point_data5)) {
+        std::cout << "Enqueued point_data5" << std::endl;
+    }
+
+    point3d_t data2_5[4];
+
+    int dequeued;
+    if (rb_dequeue_multiple(cb_point3d,data2_5,4,&dequeued)) {
+        for (int i= 0; i < dequeued; i++) {
+            std::cout << "Dequeued point3d_t data: x=" << data2_5[i].x << " y=" << data2_5[i].y << " z=" << data2_5[i].z << std::endl;
+        }
+    }
 
     // Dequeue and print point3d_t elements
     while (!rb_is_empty(cb_point3d)) {
