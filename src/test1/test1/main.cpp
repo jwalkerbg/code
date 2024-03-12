@@ -2240,12 +2240,12 @@ typedef struct {
 
 typedef struct {
     uint8_t *buffer;
-    int head;       // Index of the first element
-    int tail;       // Index one past the last element
-    int size;       // Maximum number of elements in the buffer
-    int count;      // Current number of elements in the buffer
-    size_t dataSize; // Size of each data element
-    std::mutex mtx; // Mutex for mutual exclusion
+    uint32_t head;      // Index of the first element
+    uint32_t tail;      // Index one past the last element
+    uint32_t size;      // Maximum number of elements in the buffer
+    uint32_t count;     // Current number of elements in the buffer
+    size_t dataSize;    // Size of each data element
+    std::mutex mtx;     // Mutex for mutual exclusion
 } ring_buffer_t;
 
 // Function to initialize the circular buffer
@@ -2325,6 +2325,57 @@ bool rb_dequeue_multiple(ring_buffer_t *cb, void *data, int numItems, int* deque
     return true;
 }
 
+typedef void (*rb_scan_cb_t)(uint8_t *, uint32_t index);
+
+void rb_scan_buffer_A(ring_buffer_t *cb, rb_scan_cb_t callback) {
+    std::lock_guard<std::mutex> lock(cb->mtx); // Lock the mutex
+    if (cb->count == 0) {
+        return; // Buffer empty, nothing to scan
+    }
+
+    // Initialize index to head
+    int currentIndex = cb->head / cb->dataSize;
+
+    // Scan from head to the end of the buffer
+    uint32_t elementsToEnd = cb->size - cb->head / cb->dataSize;
+    uint32_t numElementsToEnd = (cb->count < elementsToEnd) ? cb->count : elementsToEnd;
+    for (uint32_t i = 0; i < numElementsToEnd; ++i) {
+        // Call the callback function with the current data element
+        callback((cb->buffer) + currentIndex * cb->dataSize,currentIndex);
+
+        // Move to the next index
+        currentIndex = (currentIndex + 1) % cb->size;
+    }
+
+    // If there are more elements to scan, wraparound and continue from the beginning of the buffer
+    for (int i = 0; i < (cb->count - elementsToEnd); ++i) {
+        // Call the callback function with the current data element
+        callback((cb->buffer) + currentIndex * cb->dataSize,currentIndex);
+
+        // Move to the next index
+        currentIndex = (currentIndex + 1) % cb->size;
+    }
+}
+
+void rb_scan_buffer(ring_buffer_t *cb, rb_scan_cb_t callback) {
+    std::lock_guard<std::mutex> lock(cb->mtx); // Lock the mutex
+    if (cb->count == 0) {
+        return; // Buffer empty, nothing to scan
+    }
+
+    // Initialize index to head
+    int currentIndex = cb->head / cb->dataSize;
+
+    // Scan all available data in the buffer
+    for (int i = 0; i < cb->count; ++i) {
+        // Call the callback function with the current data element
+        callback(cb->buffer + currentIndex * cb->dataSize,currentIndex);
+
+        // Move to the next index, wrapping around if necessary
+        currentIndex = (currentIndex + 1) % cb->size;
+    }
+}
+
 // Function to check if the circular buffer is empty
 bool rb_is_empty(ring_buffer_t *cb) {
     return (cb->count == 0);
@@ -2343,6 +2394,12 @@ void rb_free_ring_buffer(ring_buffer_t *cb) {
         }
         delete cb;
     }
+}
+
+void cbf(uint8_t * item, uint32_t index)
+{
+    point3d_t* p = (point3d_t* )item;
+    std::cout << "Scanned point3d_t data[" << index << "]: x=" << p->x << " y=" << p->y << " z=" << p->z << std::endl;
 }
 
 int test_ring_buffer(void)
@@ -2384,10 +2441,13 @@ int test_ring_buffer(void)
     point3d_t point_data3 = {30, 30, 30};
     point3d_t point_data4 = {40, 40, 40};
     point3d_t point_data5 = {50, 50, 50};
+
     rb_enqueue(cb_point3d, &point_data1);
     rb_enqueue(cb_point3d, &point_data2);
     rb_enqueue(cb_point3d, &point_data3);
     rb_enqueue(cb_point3d, &point_data4);
+
+    rb_scan_buffer(cb_point3d,cbf);
 
     point3d_t data1;
     if (rb_dequeue(cb_point3d, &data1)) {
@@ -2399,6 +2459,8 @@ int test_ring_buffer(void)
     if (rb_enqueue(cb_point3d, &point_data5)) {
         std::cout << "Enqueued point_data5" << std::endl;
     }
+
+    rb_scan_buffer(cb_point3d,cbf);
 
     point3d_t data2_5[4];
 
