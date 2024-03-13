@@ -2236,6 +2236,7 @@ typedef struct {
     int16_t x;
     int16_t y;
     int16_t z;
+    double magnitude;
 } point3d_t;
 
 typedef struct {
@@ -2375,7 +2376,6 @@ void rb_scan_buffer(ring_buffer_t *cb, rb_scan_cb_t callback) {
         currentIndex = (currentIndex + 1) % cb->size;
     }
 }
-
 // Function to check if the circular buffer is empty
 bool rb_is_empty(ring_buffer_t *cb) {
     return (cb->count == 0);
@@ -2400,6 +2400,17 @@ void cbf(uint8_t * item, uint32_t index)
 {
     point3d_t* p = (point3d_t* )item;
     std::cout << "Scanned point3d_t data[" << index << "]: x=" << p->x << " y=" << p->y << " z=" << p->z << std::endl;
+}
+
+void mag(uint8_t * item, uint32_t index)
+{
+    point3d_t* p = (point3d_t* )item;
+    p->magnitude = sqrt(p->x*p->x + p->y*p->y + p->z*p->z);
+}
+
+double average_mag(ring_buffer_t *cb)
+{
+
 }
 
 int test_ring_buffer(void)
@@ -2448,6 +2459,11 @@ int test_ring_buffer(void)
     rb_enqueue(cb_point3d, &point_data4);
 
     rb_scan_buffer(cb_point3d,cbf);
+
+    rb_scan_buffer(cb_point3d,mag);
+
+    double fsum = 0.0;
+
 
     point3d_t data1;
     if (rb_dequeue(cb_point3d, &data1)) {
