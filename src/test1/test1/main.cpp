@@ -2249,6 +2249,9 @@ typedef struct {
     std::mutex mtx;     // Mutex for mutual exclusion
 } ring_buffer_t;
 
+typedef void (*rb_scan_cb_t)(uint8_t *, uint32_t index);
+typedef void* (*rb_inject_t)(void* accumulated_value, void* data);
+
 // Function to initialize the circular buffer
 ring_buffer_t *rb_init_circular_buffer(int size, size_t dataSize) {
     ring_buffer_t *cb = new ring_buffer_t;
@@ -2326,8 +2329,6 @@ bool rb_dequeue_multiple(ring_buffer_t *cb, void *data, int numItems, int* deque
     return true;
 }
 
-typedef void (*rb_scan_cb_t)(uint8_t *, uint32_t index);
-
 void rb_scan_buffer_A(ring_buffer_t *cb, rb_scan_cb_t callback) {
     std::lock_guard<std::mutex> lock(cb->mtx); // Lock the mutex
     if (cb->count == 0) {
@@ -2381,6 +2382,31 @@ bool rb_is_empty(ring_buffer_t *cb) {
     return (cb->count == 0);
 }
 
+void* rb_inject(ring_buffer_t* cb, void* initial_value, rb_inject_t callback)
+{
+    std::lock_guard<std::mutex> lock(cb->mtx); // Lock the mutex
+    if (cb->count == 0) {
+        return initial_value;           // Return the initial value unchanged
+    }
+
+    // Initialize index to head
+    int currentIndex = cb->head;
+
+    // Initialize accumulated value to the initial value
+    void *accumulatedValue = initial_value;
+
+    // Perform the reduction operation on all elements in the buffer
+    for (int i = 0; i < cb->count; ++i) {
+        // Call the callback function with the current accumulated value and the current data element
+        accumulatedValue = callback(accumulatedValue, cb->buffer + currentIndex * cb->dataSize);
+
+        // Move to the next index, wrapping around if necessary
+        currentIndex = (currentIndex + 1) % cb->size;
+    }
+
+    return accumulatedValue;
+}
+
 // Function to check if the circular buffer is full
 bool rb_is_full(ring_buffer_t *cb) {
     return (cb->count == cb->size);
@@ -2408,9 +2434,26 @@ void mag(uint8_t * item, uint32_t index)
     p->magnitude = sqrt(p->x*p->x + p->y*p->y + p->z*p->z);
 }
 
-double average_mag(ring_buffer_t *cb)
-{
+// Callback function to calculate the sum of all elements in the circular buffer
+void* sumCallback(void *accumulatedValue, void *data) {
+    point3d_t *sum = static_cast<point3d_t*>(accumulatedValue);
+    point3d_t *element = static_cast<point3d_t*>(data);
+    sum->magnitude += element->magnitude; // Add the current element to the accumulated sum
+    return sum; // Return the updated accumulated sum
+}
 
+typedef struct {
+    double sum;
+    uint32_t count;
+} rb_avg;
+
+// Callback function to calculate the sum of all elements in the circular buffer
+void* sum_and_avg_Callback(void *accumulatedValue, void *data) {
+    rb_avg *sum = static_cast<rb_avg*>(accumulatedValue);
+    point3d_t *element = static_cast<point3d_t*>(data);
+    sum->sum += element->magnitude; // Add the current element to the accumulated sum
+    sum->count++;
+    return sum; // Return the updated accumulated sum
 }
 
 int test_ring_buffer(void)
@@ -2462,8 +2505,16 @@ int test_ring_buffer(void)
 
     rb_scan_buffer(cb_point3d,mag);
 
-    double fsum = 0.0;
+    point3d_t initial_value = { 0,0,0,0.0};
+    rb_inject(cb_point3d,&initial_value,sumCallback);
+    std::cout << "Accumulated value = " << initial_value.magnitude << std::endl;
 
+    rb_avg init_val = { 0.0, 0 };
+    rb_inject(cb_point3d,&init_val,sum_and_avg_Callback);
+    std::cout << "Accumulated value = " << init_val.sum << " number of elements = " << init_val.count << std::endl;
+    std::cout << "Average = " << init_val.sum / init_val.count << std::endl;
+
+    double fsum = 0.0;
 
     point3d_t data1;
     if (rb_dequeue(cb_point3d, &data1)) {
