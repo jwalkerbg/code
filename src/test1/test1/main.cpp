@@ -2432,24 +2432,32 @@ void mag(uint8_t * item, uint32_t index)
 {
     point3d_t* p = (point3d_t* )item;
     p->magnitude = sqrt(p->x*p->x + p->y*p->y + p->z*p->z);
-}
-
-// Callback function to calculate the sum of all elements in the circular buffer
-void* sumCallback(void *accumulatedValue, void *data) {
-    point3d_t *sum = static_cast<point3d_t*>(accumulatedValue);
-    point3d_t *element = static_cast<point3d_t*>(data);
-    sum->magnitude += element->magnitude; // Add the current element to the accumulated sum
-    return sum; // Return the updated accumulated sum
+    std::cout << "Magnitude = " << p->magnitude << std::endl;
 }
 
 typedef struct {
     double sum;
+} rb_sum_t;
+
+typedef struct {
+    double sum;
+    double avg;
     uint32_t count;
-} rb_avg;
+} rb_avg_t;
+
+// Callback function to calculate the sum of all elements in the circular buffer
+void* sumCallback(void *accumulatedValue, void *data) {
+    rb_avg_t *sum = static_cast<rb_avg_t*>(accumulatedValue);
+    point3d_t *element = static_cast<point3d_t*>(data);
+    sum->sum += element->magnitude; // Add the current element to the accumulated sum
+    return sum; // Return the updated accumulated sum
+}
+
+
 
 // Callback function to calculate the sum of all elements in the circular buffer
 void* sum_and_avg_Callback(void *accumulatedValue, void *data) {
-    rb_avg *sum = static_cast<rb_avg*>(accumulatedValue);
+    rb_avg_t *sum = static_cast<rb_avg_t*>(accumulatedValue);
     point3d_t *element = static_cast<point3d_t*>(data);
     sum->sum += element->magnitude; // Add the current element to the accumulated sum
     sum->count++;
@@ -2505,14 +2513,14 @@ int test_ring_buffer(void)
 
     rb_scan_buffer(cb_point3d,mag);
 
-    point3d_t initial_value = { 0,0,0,0.0};
+    rb_sum_t initial_value = { 0.0 };
     rb_inject(cb_point3d,&initial_value,sumCallback);
-    std::cout << "Accumulated value = " << initial_value.magnitude << std::endl;
+    std::cout << "Accumulated value = " << initial_value.sum << std::endl;
 
-    rb_avg init_val = { 0.0, 0 };
+    rb_avg_t init_val = { 0.0, 0.0, 0 };
     rb_inject(cb_point3d,&init_val,sum_and_avg_Callback);
-    std::cout << "Accumulated value = " << init_val.sum << " number of elements = " << init_val.count << std::endl;
-    std::cout << "Average = " << init_val.sum / init_val.count << std::endl;
+    init_val.avg = init_val.sum / init_val.count;
+    std::cout << "Accumulated value = " << init_val.sum << " number of elements = " << init_val.count << " Average = " << init_val.avg << std::endl;
 
     double fsum = 0.0;
 
