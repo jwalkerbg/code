@@ -2591,6 +2591,7 @@ typedef struct {
 
 #define RING_BUFFER_SIZE    (125)
 ring_buffer_t* rb_handle = NULL;
+ring_buffer_t* rb_handle_mapped = NULL;
 
 point3d_t gyro_data = { 0, 0, 0, 0 };
 
@@ -2612,6 +2613,20 @@ void* rb_avg_mag_callback(void* accumulated_value, void* data)
     }
     ptr->count++;
     return accumulated_value;
+}
+
+void rb_scan_callback(uint8_t* element, uint32_t index)
+{
+    point3d_t* ptr = (point3d_t*)element;
+    std::cout << index << ": x = " << ptr->x << " y = " << ptr->y << " z = " << ptr->z << " magnitude = " << ptr->magnitude << std::endl;
+   }
+
+void rb_mapping_callback(void * original, void * mapped)
+{
+    ((point3d_t* )mapped)->x = -((point3d_t* )original)->x;
+    ((point3d_t* )mapped)->y = -((point3d_t* )original)->y;
+    ((point3d_t* )mapped)->z = -((point3d_t* )original)->z;
+    ((point3d_t* )mapped)->magnitude = ((point3d_t* )original)->magnitude;
 }
 
 int test_ring_buffer_as_module(void)
@@ -2643,6 +2658,10 @@ int test_ring_buffer_as_module(void)
         avg_mag.avg = avg_mag.sum / avg_mag.count;
         std::cout << "sum = " << avg_mag.sum << " avg = " << avg_mag.avg << " count = " << avg_mag.count << std::endl;
     }
+
+    rb_handle_mapped = rb_map(rb_handle,rb_mapping_callback,sizeof(point3d_t));
+
+    rb_scan_buffer(rb_handle_mapped,rb_scan_callback);
 
     rb_free_ring_buffer((rb_handle));
 
