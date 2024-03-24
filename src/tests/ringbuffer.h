@@ -4,9 +4,9 @@
 
 #include <stddef.h>
 #include <stdlib.h>
-#include <string.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include <string.h>
 
 #ifdef __cplusplus
 extern "C" {
