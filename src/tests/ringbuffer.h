@@ -30,7 +30,7 @@ typedef void (*rb_map_cb_t)(void * original, void * mapped);
 ring_buffer_t * rb_init_ring_buffer(int size, size_t dataSize);
 bool rb_enqueue(ring_buffer_t *cb, void *data);
 bool rb_dequeue(ring_buffer_t *cb, void *data);
-bool rb_dequeue_multiple(ring_buffer_t *cb, void *data, uint32_t numItems, int* dequeued);
+bool rb_dequeue_multiple(ring_buffer_t *cb, void *data, uint32_t numItems, uint32_t* dequeued);
 void rb_scan_buffer(ring_buffer_t *cb, rb_scan_cb_t callback);
 void* rb_inject(ring_buffer_t* cb, void* initial_value, rb_inject_t callback);
 ring_buffer_t* rb_map(ring_buffer_t* cb, rb_map_cb_t callback, size_t mappedDataSize);
