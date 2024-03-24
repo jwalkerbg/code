@@ -23,7 +23,7 @@ typedef struct {
 } ring_buffer_t;
 
 typedef void (*rb_scan_cb_t)(uint8_t *, uint32_t);
-typedef void* (*rb_inject_t)(void* accumulated_value, void* data);
+typedef void* (*rb_inject_cb_t)(void* accumulated_value, void* data);
 typedef void (*rb_map_cb_t)(void * original, void * mapped);
 
 // Function prototypes
@@ -32,7 +32,7 @@ bool rb_enqueue(ring_buffer_t *cb, void *data);
 bool rb_dequeue(ring_buffer_t *cb, void *data);
 bool rb_dequeue_multiple(ring_buffer_t *cb, void *data, uint32_t numItems, uint32_t* dequeued);
 void rb_scan_buffer(ring_buffer_t *cb, rb_scan_cb_t callback);
-void* rb_inject(ring_buffer_t* cb, void* initial_value, rb_inject_t callback);
+void* rb_inject(ring_buffer_t* cb, void* initial_value, rb_inject_cb_t callback);
 ring_buffer_t* rb_map(ring_buffer_t* cb, rb_map_cb_t callback, size_t mappedDataSize);
 bool rb_is_empty(ring_buffer_t *cb);
 bool rb_is_full(ring_buffer_t *cb);
