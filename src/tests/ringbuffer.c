@@ -18,7 +18,7 @@
 //  a pointer to a ringbuffer or NULL if there were no memory to allocate it.
 // Description: This function initializes the ring buffer.
 // dataSize is usually sizeof of some struct describing the data elements.
-ring_buffer_t *rb_init_ring_buffer(int size, size_t dataSize)
+ring_buffer_t *rb_init_ring_buffer(uint32_t size, uint32_t dataSize)
 {
     ring_buffer_t *cb = (ring_buffer_t *)malloc(sizeof(ring_buffer_t));
     if (cb == NULL) {
@@ -148,7 +148,7 @@ void rb_scan_buffer(ring_buffer_t *cb, rb_scan_cb_t callback)
 {
   //  k_sem_take(&cb->bmx,K_FOREVER); // Lock the mutex
     // Initialize index to head
-    int currentIndex = cb->head / cb->dataSize;
+    uint32_t currentIndex = cb->head / cb->dataSize;
 
     // Scan all available data in the buffer
     for (uint32_t i = 0; i < cb->count; ++i) {
@@ -182,7 +182,7 @@ void* rb_inject(ring_buffer_t* cb, void* initial_value, rb_inject_cb_t callback)
     }
 
     // Initialize index to head
-    int currentIndex = cb->head / cb->dataSize;
+    uint32_t currentIndex = cb->head / cb->dataSize;
 
     // Initialize accumulated value to the initial value
     void *accumulatedValue = initial_value;
@@ -211,7 +211,7 @@ void* rb_inject(ring_buffer_t* cb, void* initial_value, rb_inject_cb_t callback)
 // if creates new function from the original function (mapping).
 // The callback function takes two arguments: pointer to the curent original value and pointer to a space
 // where the new value must be stored.
-ring_buffer_t* rb_map(ring_buffer_t* cb, rb_map_cb_t callback, size_t mappedDataSize)
+ring_buffer_t* rb_map(ring_buffer_t* cb, rb_map_cb_t callback, uint32_t mappedDataSize)
 {
     // k_sem_take(&cb->bmx,K_FOREVER); // Lock the mutex
 
@@ -231,7 +231,7 @@ ring_buffer_t* rb_map(ring_buffer_t* cb, rb_map_cb_t callback, size_t mappedData
     }
 
     // Apply the callback function to each element of the original circular buffer and enqueue the results into the new circular buffer
-    int currentIndex = cb->head / cb->dataSize;
+    uint32_t currentIndex = cb->head / cb->dataSize;
     for (uint32_t i = 0; i < cb->count; ++i) {
         callback(cb->buffer + currentIndex * cb->dataSize, new_data_element);
         rb_enqueue(rb_mapped,new_data_element);
