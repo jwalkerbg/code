@@ -2629,6 +2629,14 @@ void rb_mapping_callback(void * original, void * mapped)
     ((point3d_t* )mapped)->magnitude = ((point3d_t* )original)->magnitude;
 }
 
+bool rb_selected_callback(void * data)
+{
+    if (((point3d_t* )data)->magnitude == 29) {
+        return true;
+    }
+    return false;
+}
+
 int test_ring_buffer_as_module(void)
 {
     if ((rb_handle = rb_init_ring_buffer(RING_BUFFER_SIZE,sizeof(point3d_t))) == NULL) {
@@ -2643,6 +2651,9 @@ int test_ring_buffer_as_module(void)
         gyro_data.x = x;
         gyro_data.y = y;
         gyro_data.z = z;
+        if (++z > 12) {
+            z = 7;
+        }
         calculate_magnitude(&gyro_data);
         std::cout << "x = " << gyro_data.x << " y = " << gyro_data.y << " z = " << gyro_data.z << " magnitude = " << gyro_data.magnitude << std::endl;
 
@@ -2662,6 +2673,9 @@ int test_ring_buffer_as_module(void)
     rb_handle_mapped = rb_map(rb_handle,rb_mapping_callback,sizeof(point3d_t));
 
     rb_scan_buffer(rb_handle_mapped,rb_scan_callback);
+
+    ring_buffer_t* rb_selected = rb_select(rb_handle,rb_selected_callback);
+    rb_scan_buffer(rb_selected,rb_scan_callback);
 
     rb_free_ring_buffer((rb_handle));
 
