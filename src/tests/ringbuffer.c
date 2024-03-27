@@ -215,7 +215,7 @@ ring_buffer_t* rb_map(ring_buffer_t* cb, rb_map_cb_t callback, uint32_t mappedDa
 {
     // k_sem_take(&cb->bmx,K_FOREVER); // Lock the mutex
 
-    // Create a new circular buffer with the given size and data size
+    // Create a new ring buffer with the given size and data size
     ring_buffer_t* rb_mapped = rb_init_ring_buffer(cb->size,mappedDataSize);
     if (rb_mapped  == NULL) {
         // k_sem_give(&cb->bmx);
@@ -225,12 +225,12 @@ ring_buffer_t* rb_map(ring_buffer_t* cb, rb_map_cb_t callback, uint32_t mappedDa
     // Allocate memory for the temporary new data element
     void *new_data_element = malloc(mappedDataSize);
     if (new_data_element == NULL) {
-        rb_free_ring_buffer(rb_mapped); // Free the new circular buffer
+        rb_free_ring_buffer(rb_mapped); // Free the new ring buffer
         // k_sem_give(&cb->bmx); // Unlock the mutex
         return NULL; // Memory allocation failed
     }
 
-    // Apply the callback function to each element of the original circular buffer and enqueue the results into the new circular buffer
+    // Apply the callback function to each element of the original ring buffer and enqueue the results into the new ring buffer
     uint32_t currentIndex = cb->head / cb->dataSize;
     for (uint32_t i = 0; i < cb->count; ++i) {
         callback(cb->buffer + currentIndex * cb->dataSize, new_data_element);
@@ -244,6 +244,31 @@ ring_buffer_t* rb_map(ring_buffer_t* cb, rb_map_cb_t callback, uint32_t mappedDa
 
     // k_sem_give(&cb->bmx);
     return rb_mapped;
+}
+
+ring_buffer_t* rb_select(ring_buffer_t* cb, rb_select_cb_t callback)
+{
+    // k_sem_take(&cb->bmx,K_FOREVER); // Lock the mutex
+
+    // Create a new ring buffer with the given size and data size
+    ring_buffer_t* rb_selected = rb_init_ring_buffer(cb->size,cb->dataSize);
+    if (rb_selected  == NULL) {
+        // k_sem_give(&cb->bmx);
+        return NULL;
+    }
+
+    // Apply the callback function to each element of the original ring buffer and enqueue the results into the new ring buffer
+    uint32_t currentIndex = cb->head / cb->dataSize;
+    for (uint32_t i = 0; i < cb->count; ++i) {
+        if (callback(cb->buffer + currentIndex * cb->dataSize)) {
+            rb_enqueue(rb_selected,cb->buffer + currentIndex * cb->dataSize);
+        }
+        // Move to the next index, wrapping around if necessary
+        currentIndex = (currentIndex + 1) % cb->size;
+    }
+
+    // k_sem_give(&cb->bmx);
+    return rb_selected;
 }
 
 // Input:
